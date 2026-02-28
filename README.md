@@ -19,7 +19,7 @@ graph TD
     classDef db fill:#e8f5e9,stroke:#388e3c,stroke-width:2px;
 
     %% Nodes
-    Loadgen["🤖 Loadgen Bot<br/>(Playwright)"]:::client
+    Loadgen["🤖 Loadgen<br/>"]:::client
     Browser["🌐 Web Browser<br/>(User)"]:::client
     
     Nginx["🛡️ Nginx Proxy<br/>(:8080)"]:::proxy
