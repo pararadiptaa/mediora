@@ -46,7 +46,7 @@ graph TD
 |---------|------------|------|
 | **frontend** | Nginx + HTML/JS/Tailwind | Serves the static patient portal and reverse-proxies API requests. |
 | **appointment-api** | Node.js / Express | Handles booking logic, interfaces with PostgreSQL, and forwards payments. |
-| **billing-api** | Python / Flask | Processes mock payments with configurable failure rates. |
+| **billing-api** | Python / Flask | Processes mock payments with configurable failure rates. Instrumented via `autodynatrace` to ensure unbroken distributed traces from Node.js. |
 | **postgres** | PostgreSQL 15 | Persistent storage layer for appointment records. |
 | **loadgen** | Playwright (Chromium) | Headless bot that drives continuous, realistic user traffic. |
 

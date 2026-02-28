@@ -75,6 +75,8 @@ services:
       DELAY_MIN: "100"
       DELAY_MAX: "500"
       FAILURE_RATE: "0.3"
+      AUTOWRAPT_BOOTSTRAP: "autodynatrace"
+      AUTODYNATRACE_CAPTURE_HEADERS: "True"
       # ── Chaos Engineering ──
       MEDIORA_PROBLEMS: "Billing500"
       CHAOS_DELAY_SECONDS: "120"

@@ -6,6 +6,7 @@ import time
 from datetime import datetime, timezone
 
 from flask import Flask, jsonify, request
+import autodynatrace
 
 # ── Config from environment ──────────────────────────────────────────
 PORT = int(os.environ.get("PORT", 3002))
