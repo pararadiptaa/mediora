@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Mediora — Medical Records</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { "primary": "#137fec", "background-light": "#f6f7f8" },
+                    fontFamily: { "display": ["Inter", "sans-serif"] },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+</head>
+
+<body class="bg-background-light text-slate-900 font-display antialiased">
+    <div class="relative flex h-screen w-full flex-row overflow-hidden bg-background-light">
+        <!-- Sidebar -->
+        <aside class="flex h-full w-64 flex-col border-r border-slate-200 bg-white">
+            <div class="flex h-full flex-col justify-between p-4">
+                <div class="flex flex-col gap-4">
+                    <div class="flex items-center gap-3 px-2 py-2">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-white">
+                            <span class="material-symbols-outlined text-2xl">local_hospital</span>
+                        </div>
+                        <h1 class="text-slate-900 text-lg font-bold leading-normal">Mediora</h1>
+                    </div>
+                    <nav class="flex flex-col gap-2">
+                        <a class="flex items-center gap-3 rounded-lg px-3 py-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                            href="/dashboard.html">
+                            <span class="material-symbols-outlined">dashboard</span>
+                            <p class="text-sm font-medium leading-normal">Dashboard</p>
+                        </a>
+                        <a class="flex items-center gap-3 rounded-lg px-3 py-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                            href="/booking.html">
+                            <span class="material-symbols-outlined">calendar_month</span>
+                            <p class="text-sm font-medium leading-normal">Appointments</p>
+                        </a>
+                        <a class="flex items-center gap-3 rounded-lg bg-primary/10 px-3 py-3 text-primary"
+                            href="/records.html">
+                            <span class="material-symbols-outlined fill-1">description</span>
+                            <p class="text-sm font-medium leading-normal">Medical Records</p>
+                        </a>
+                        <a class="flex items-center gap-3 rounded-lg px-3 py-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                            href="/billing.html">
+                            <span class="material-symbols-outlined">credit_card</span>
+                            <p class="text-sm font-medium leading-normal">Billing</p>
+                        </a>
+                    </nav>
+                </div>
+                <button id="logout-btn"
+                    class="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-slate-100 py-3 text-slate-700 hover:bg-slate-200 transition-colors text-sm font-bold">
+                    <span class="material-symbols-outlined">logout</span>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex flex-1 flex-col h-full overflow-y-auto bg-background-light">
+            <header
+                class="sticky top-0 z-10 flex w-full items-center justify-between border-b border-slate-200 bg-white px-8 py-4">
+                <div class="flex items-center gap-4">
+                    <h2 class="text-slate-900 text-xl font-bold leading-tight">Medical Records</h2>
+                </div>
+                <div class="flex items-center gap-6">
+                    <button
+                        class="relative flex h-10 w-10 items-center justify-center rounded-full bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-primary transition-colors">
+                        <span class="material-symbols-outlined">notifications</span>
+                        <span
+                            class="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-white"></span>
+                    </button>
+                    <div class="h-10 w-10 rounded-full bg-slate-200 bg-cover bg-center"
+                        style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD3f6TgcilXJG5olVoR0T_EVRXYTj85n0Oq4lBrrweQhWkdzUKrgGBZXFjLPzhG2sbAaCpUYMEtJi7ZMGnDv1jXtKMYwFkZrq4zYT5FSvc9dtvsVvds2MycnB0jw2Yj0VU6nui_dEw1_NlCJYjIgMqIdgszmX_H-r56m_p_rb97YuUmjjTKIT4ieZ95MAIQBZL5PS6io2jWYVNMUxI-dfNvTjGUoLe-FrtVWTtN7p-r7NiuOvixffFfSAEr5D-WBm3Occ_nv6WdHguf');">
+                    </div>
+                </div>
+            </header>
+
+            <div class="flex-1 p-8">
+                <div class="mx-auto max-w-6xl space-y-8">
+                    <div>
+                        <h1 class="text-3xl font-bold text-slate-900">Medical History</h1>
+                        <p class="text-slate-500 mt-1">A complete record of your past tests, consultations, and
+                            procedures.</p>
+                    </div>
+
+                    <!-- Records Table -->
+                    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm text-slate-600">
+                                <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+                                    <tr>
+                                        <th class="px-6 py-3 font-semibold" scope="col">Date</th>
+                                        <th class="px-6 py-3 font-semibold" scope="col">Test / Procedure</th>
+                                        <th class="px-6 py-3 font-semibold" scope="col">Doctor</th>
+                                        <th class="px-6 py-3 font-semibold" scope="col">Facility</th>
+                                        <th class="px-6 py-3 font-semibold" scope="col">Status</th>
+                                        <th class="px-6 py-3 text-right font-semibold" scope="col">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <tr class="hover:bg-slate-50/50 transition-colors">
+                                        <td class="px-6 py-4 font-medium text-slate-900">Oct 24, 2023</td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-2"><span
+                                                    class="material-symbols-outlined text-slate-400 text-lg">bloodtype</span>Blood
+                                                Test (CBC)</div>
+                                        </td>
+                                        <td class="px-6 py-4">Dr. Sarah Jenkins</td>
+                                        <td class="px-6 py-4">Mediora Main Lab</td>
+                                        <td class="px-6 py-4"><span
+                                                class="inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700">Completed</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-right"><a href="/record-detail.html?id=1"
+                                                class="inline-flex items-center gap-1 text-primary hover:text-blue-700 font-medium">View
+                                                <span class="material-symbols-outlined text-sm">arrow_forward</span></a>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50/50 transition-colors">
+                                        <td class="px-6 py-4 font-medium text-slate-900">Oct 10, 2023</td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-2"><span
+                                                    class="material-symbols-outlined text-slate-400 text-lg">radiology</span>Chest
+                                                X-Ray</div>
+                                        </td>
+                                        <td class="px-6 py-4">Dr. Tirta</td>
+                                        <td class="px-6 py-4">Radiology Dept, 2F</td>
+                                        <td class="px-6 py-4"><span
+                                                class="inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700">Completed</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-right"><a href="/record-detail.html?id=2"
+                                                class="inline-flex items-center gap-1 text-primary hover:text-blue-700 font-medium">View
+                                                <span class="material-symbols-outlined text-sm">arrow_forward</span></a>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50/50 transition-colors">
+                                        <td class="px-6 py-4 font-medium text-slate-900">Sep 28, 2023</td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-2"><span
+                                                    class="material-symbols-outlined text-slate-400 text-lg">ecg_heart</span>Cardiology
+                                                Consultation</div>
+                                        </td>
+                                        <td class="px-6 py-4">Dr. Tirta</td>
+                                        <td class="px-6 py-4">Room 304, Main Building</td>
+                                        <td class="px-6 py-4"><span
+                                                class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">Archived</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-right"><a href="/record-detail.html?id=3"
+                                                class="inline-flex items-center gap-1 text-primary hover:text-blue-700 font-medium">View
+                                                <span class="material-symbols-outlined text-sm">arrow_forward</span></a>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50/50 transition-colors">
+                                        <td class="px-6 py-4 font-medium text-slate-900">Aug 15, 2023</td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-2"><span
+                                                    class="material-symbols-outlined text-slate-400 text-lg">vaccines</span>Flu
+                                                Vaccination</div>
+                                        </td>
+                                        <td class="px-6 py-4">Dr. Emily Williams</td>
+                                        <td class="px-6 py-4">General Clinic, 1F</td>
+                                        <td class="px-6 py-4"><span
+                                                class="inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700">Completed</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-right"><a href="/record-detail.html?id=4"
+                                                class="inline-flex items-center gap-1 text-primary hover:text-blue-700 font-medium">View
+                                                <span class="material-symbols-outlined text-sm">arrow_forward</span></a>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50/50 transition-colors">
+                                        <td class="px-6 py-4 font-medium text-slate-900">Jul 3, 2023</td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-2"><span
+                                                    class="material-symbols-outlined text-slate-400 text-lg">monitoring</span>Full
+                                                Body Check-Up</div>
+                                        </td>
+                                        <td class="px-6 py-4">Dr. Michael Jones</td>
+                                        <td class="px-6 py-4">Mediora Main Lab</td>
+                                        <td class="px-6 py-4"><span
+                                                class="inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700">Completed</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-right"><a href="/record-detail.html?id=5"
+                                                class="inline-flex items-center gap-1 text-primary hover:text-blue-700 font-medium">View
+                                                <span class="material-symbols-outlined text-sm">arrow_forward</span></a>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50/50 transition-colors">
+                                        <td class="px-6 py-4 font-medium text-slate-900">May 18, 2023</td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-2"><span
+                                                    class="material-symbols-outlined text-slate-400 text-lg">dentistry</span>Dental
+                                                Cleaning</div>
+                                        </td>
+                                        <td class="px-6 py-4">Dr. Sisca</td>
+                                        <td class="px-6 py-4">Dental Wing, Room 105</td>
+                                        <td class="px-6 py-4"><span
+                                                class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">Archived</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-right"><a href="/record-detail.html?id=6"
+                                                class="inline-flex items-center gap-1 text-primary hover:text-blue-700 font-medium">View
+                                                <span class="material-symbols-outlined text-sm">arrow_forward</span></a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const raw = localStorage.getItem('mediora_user');
+            if (!raw) { window.location.href = '/login.html'; return; }
+
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                localStorage.removeItem('mediora_user');
+                window.location.href = '/login.html';
+            });
+        });
+    </script>
+</body>
+
+</html>

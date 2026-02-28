@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Mediora Patient Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { "primary": "#137fec", "background-light": "#f6f7f8" },
+                    fontFamily: { "display": ["Inter", "sans-serif"] },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+</head>
+
+<body class="bg-background-light text-slate-900 font-display antialiased">
+    <div class="relative flex h-screen w-full flex-row overflow-hidden bg-background-light">
+        <!-- Sidebar -->
+        <aside class="flex h-full w-64 flex-col border-r border-slate-200 bg-white">
+            <div class="flex h-full flex-col justify-between p-4">
+                <div class="flex flex-col gap-4">
+                    <div class="flex items-center gap-3 px-2 py-2">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-white">
+                            <span class="material-symbols-outlined text-2xl">local_hospital</span>
+                        </div>
+                        <h1 class="text-slate-900 text-lg font-bold leading-normal">Mediora</h1>
+                    </div>
+                    <nav class="flex flex-col gap-2">
+                        <a class="flex items-center gap-3 rounded-lg bg-primary/10 px-3 py-3 text-primary"
+                            href="/dashboard.html">
+                            <span class="material-symbols-outlined fill-1">dashboard</span>
+                            <p class="text-sm font-medium leading-normal">Dashboard</p>
+                        </a>
+                        <a class="flex items-center gap-3 rounded-lg px-3 py-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                            href="/booking.html">
+                            <span class="material-symbols-outlined">calendar_month</span>
+                            <p class="text-sm font-medium leading-normal">Appointments</p>
+                        </a>
+                        <a class="flex items-center gap-3 rounded-lg px-3 py-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                            href="/records.html">
+                            <span class="material-symbols-outlined">description</span>
+                            <p class="text-sm font-medium leading-normal">Medical Records</p>
+                        </a>
+                        <a class="flex items-center gap-3 rounded-lg px-3 py-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                            href="/billing.html">
+                            <span class="material-symbols-outlined">credit_card</span>
+                            <p class="text-sm font-medium leading-normal">Billing</p>
+                        </a>
+                    </nav>
+                </div>
+                <button id="logout-btn"
+                    class="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-slate-100 py-3 text-slate-700 hover:bg-slate-200 transition-colors text-sm font-bold">
+                    <span class="material-symbols-outlined">logout</span>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+        <!-- Main Content Area -->
+        <main class="flex flex-1 flex-col h-full overflow-y-auto bg-background-light">
+            <header
+                class="sticky top-0 z-10 flex w-full items-center justify-between border-b border-slate-200 bg-white px-8 py-4">
+                <div class="flex items-center gap-4">
+                    <h2 class="text-slate-900 text-xl font-bold leading-tight" id="header-greeting">Welcome, Patient
+                    </h2>
+                </div>
+                <div class="flex items-center gap-6">
+                    <button
+                        class="relative flex h-10 w-10 items-center justify-center rounded-full bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-primary transition-colors">
+                        <span class="material-symbols-outlined">notifications</span>
+                        <span
+                            class="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-white"></span>
+                    </button>
+                    <div class="h-10 w-10 rounded-full bg-slate-200 bg-cover bg-center" id="header-avatar"
+                        style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD3f6TgcilXJG5olVoR0T_EVRXYTj85n0Oq4lBrrweQhWkdzUKrgGBZXFjLPzhG2sbAaCpUYMEtJi7ZMGnDv1jXtKMYwFkZrq4zYT5FSvc9dtvsVvds2MycnB0jw2Yj0VU6nui_dEw1_NlCJYjIgMqIdgszmX_H-r56m_p_rb97YuUmjjTKIT4ieZ95MAIQBZL5PS6io2jWYVNMUxI-dfNvTjGUoLe-FrtVWTtN7p-r7NiuOvixffFfSAEr5D-WBm3Occ_nv6WdHguf');">
+                    </div>
+                </div>
+            </header>
+            <div class="flex-1 p-8">
+                <div class="mx-auto max-w-6xl space-y-8">
+                    <!-- Quick Actions & Overview -->
+                    <div class="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <h1 class="text-3xl font-bold text-slate-900">Dashboard Overview</h1>
+                            <p class="text-slate-500 mt-1">Manage your health journey with ease.</p>
+                        </div>
+                        <a href="/booking.html"
+                            class="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-bold text-white shadow-md shadow-primary/20 hover:bg-blue-600 transition-all"
+                            id="book-appointment-btn">
+                            <span class="material-symbols-outlined text-lg">add_circle</span>
+                            Book New Appointment
+                        </a>
+                    </div>
+
+                    <!-- Cards Grid -->
+                    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+
+                        <!-- ═══ Upcoming Appointment Card (conditionally visible) ═══ -->
+                        <div id="appointment-card"
+                            class="flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                            <div class="border-b border-slate-100 px-6 py-4 flex justify-between items-center">
+                                <h3 class="font-bold text-slate-900">Upcoming Appointment</h3>
+                                <span
+                                    class="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-primary">Confirmed</span>
+                            </div>
+                            <div class="flex flex-col gap-6 p-6 sm:flex-row sm:items-center">
+                                <div
+                                    class="h-24 w-24 flex-shrink-0 overflow-hidden rounded-full border-4 border-slate-50 shadow-sm">
+                                    <img alt="Dr. Tirta Profile" class="h-full w-full object-cover"
+                                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1ZREPM4RfirCaOp_B3ko6c5dyNVrNccOn6kZl8ClJorWixEFf_X9hLmMkCt48_gPNsrMC1ZIHEJyZ7PJSeQWKtxopcZD5NiLzMjJYmsUFad8dNMPeI7HOGGWwj1AhhhgCVimizIfzO6wbwfQMqtYHJc3uWiqS_R3CKWMcqqlxlazjW9Mir9rt9XZsefzoyg17RSukYFwe1xeEk2P7OpXX97njbefZZLkyz8fh6WARczYu_Vobk4nsNFQvPTVTcBjtZoT6OSvPOY3i" />
+                                </div>
+                                <div class="flex flex-1 flex-col gap-1">
+                                    <h4 class="text-lg font-bold text-slate-900">Dr. Tirta</h4>
+                                    <p class="text-sm font-medium text-slate-500">Cardiology Specialist</p>
+                                    <div class="mt-2 flex items-center gap-2 text-sm text-slate-700">
+                                        <span class="material-symbols-outlined text-primary text-lg">schedule</span>
+                                        <span>Today, 10:00 AM - 11:00 AM</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 text-sm text-slate-700">
+                                        <span class="material-symbols-outlined text-primary text-lg">location_on</span>
+                                        <span>Room 304, Main Building</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex gap-3 bg-slate-50 px-6 py-4">
+                                <button
+                                    class="flex-1 rounded-lg border border-slate-200 bg-white py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-red-600 transition-colors">Cancel</button>
+                                <a href="/booking.html?reschedule=true"
+                                    class="flex-1 rounded-lg bg-primary/10 py-2 text-sm font-medium text-primary hover:bg-primary/20 transition-colors text-center">Reschedule</a>
+                                <a href="/appointment-detail.html"
+                                    class="flex-1 rounded-lg bg-primary py-2 text-sm font-bold text-white hover:bg-blue-600 transition-colors text-center shadow-sm">View
+                                    Details</a>
+                            </div>
+                        </div>
+
+                        <!-- ═══ Appointment Empty State (hidden by default) ═══ -->
+                        <div id="appointment-empty"
+                            class="hidden flex flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed border-slate-300 bg-white shadow-sm p-10 text-center">
+                            <span class="material-symbols-outlined text-5xl text-slate-300 mb-4">calendar_month</span>
+                            <h3 class="font-bold text-slate-900 text-lg mb-1">No Upcoming Appointments</h3>
+                            <p class="text-slate-500 text-sm mb-6">You don't have any scheduled visits yet.</p>
+                            <a href="/booking.html"
+                                class="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-primary/20 hover:bg-blue-600 transition-all">
+                                <span class="material-symbols-outlined text-lg">add_circle</span>
+                                Book Your First Appointment
+                            </a>
+                        </div>
+
+                        <!-- ═══ Billing Card (conditionally visible) ═══ -->
+                        <div id="billing-card"
+                            class="flex flex-col justify-between overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                            <div class="border-b border-slate-100 px-6 py-4">
+                                <h3 class="font-bold text-slate-900">Billing &amp; Insurance</h3>
+                            </div>
+                            <div class="flex flex-1 flex-col justify-center p-6">
+                                <p class="text-sm font-medium text-slate-500">Outstanding Balance</p>
+                                <div class="mt-2 flex items-baseline gap-1">
+                                    <span class="text-4xl font-bold text-slate-900">$150.00</span>
+                                    <span class="text-sm text-slate-400">USD</span>
+                                </div>
+                                <p class="mt-2 text-sm text-slate-500">Invoice #INV-2023-001 • Due in 3 days</p>
+                                <div class="mt-6 flex flex-col gap-3">
+                                    <div
+                                        class="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 p-3">
+                                        <div class="flex items-center gap-3">
+                                            <div
+                                                class="flex h-10 w-10 items-center justify-center rounded bg-white shadow-sm">
+                                                <span
+                                                    class="material-symbols-outlined text-primary">health_and_safety</span>
+                                            </div>
+                                            <div class="flex flex-col">
+                                                <span class="text-sm font-bold text-slate-900">BlueCross</span>
+                                                <span class="text-xs text-slate-500">Policy ending in **** 4589</span>
+                                            </div>
+                                        </div>
+                                        <span
+                                            class="text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded">Active</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-slate-50 px-6 py-4">
+                                <a href="/billing.html"
+                                    class="block w-full rounded-lg bg-slate-900 py-2.5 text-sm font-bold text-white text-center shadow-md hover:bg-slate-800 transition-colors">
+                                    Pay with Insurance
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- ═══ Billing Empty State (hidden by default) ═══ -->
+                        <div id="billing-empty"
+                            class="hidden flex flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed border-slate-300 bg-white shadow-sm p-10 text-center">
+                            <span class="material-symbols-outlined text-5xl text-slate-300 mb-4">payments</span>
+                            <h3 class="font-bold text-slate-900 text-lg mb-1">No Outstanding Bills</h3>
+                            <p class="text-slate-500 text-sm">You're all caught up — no payments due.</p>
+                        </div>
+                    </div>
+
+                    <!-- Recent Medical Records Table (always visible) -->
+                    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                        <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+                            <h3 class="font-bold text-slate-900">Recent Medical Records</h3>
+                            <a href="/records.html" class="text-sm font-medium text-primary hover:underline">View
+                                All</a>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm text-slate-600">
+                                <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+                                    <tr>
+                                        <th class="px-6 py-3 font-semibold" scope="col">Date</th>
+                                        <th class="px-6 py-3 font-semibold" scope="col">Test Type</th>
+                                        <th class="px-6 py-3 font-semibold" scope="col">Doctor</th>
+                                        <th class="px-6 py-3 font-semibold" scope="col">Status</th>
+                                        <th class="px-6 py-3 text-right font-semibold" scope="col">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <tr class="hover:bg-slate-50/50 transition-colors">
+                                        <td class="px-6 py-4 font-medium text-slate-900">Oct 24, 2023</td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-2"><span
+                                                    class="material-symbols-outlined text-slate-400 text-lg">bloodtype</span>Blood
+                                                Test (CBC)</div>
+                                        </td>
+                                        <td class="px-6 py-4">Dr. Sarah Jenkins</td>
+                                        <td class="px-6 py-4"><span
+                                                class="inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700">Completed</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-right"><a href="/record-detail.html?id=1"
+                                                class="inline-flex items-center gap-1 text-primary hover:text-blue-700 font-medium">View
+                                                Results <span
+                                                    class="material-symbols-outlined text-sm">arrow_forward</span></a>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50/50 transition-colors">
+                                        <td class="px-6 py-4 font-medium text-slate-900">Oct 10, 2023</td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-2"><span
+                                                    class="material-symbols-outlined text-slate-400 text-lg">radiology</span>Chest
+                                                X-Ray</div>
+                                        </td>
+                                        <td class="px-6 py-4">Dr. Tirta</td>
+                                        <td class="px-6 py-4"><span
+                                                class="inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700">Completed</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-right"><a href="/record-detail.html?id=2"
+                                                class="inline-flex items-center gap-1 text-primary hover:text-blue-700 font-medium">View
+                                                Results <span
+                                                    class="material-symbols-outlined text-sm">arrow_forward</span></a>
+                                        </td>
+                                    </tr>
+                                    <tr class="hover:bg-slate-50/50 transition-colors">
+                                        <td class="px-6 py-4 font-medium text-slate-900">Sep 28, 2023</td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-2"><span
+                                                    class="material-symbols-outlined text-slate-400 text-lg">ecg_heart</span>Cardiology
+                                                Consultation</div>
+                                        </td>
+                                        <td class="px-6 py-4">Dr. Tirta</td>
+                                        <td class="px-6 py-4"><span
+                                                class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">Archived</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-right"><a href="/record-detail.html?id=3"
+                                                class="inline-flex items-center gap-1 text-primary hover:text-blue-700 font-medium">View
+                                                Results <span
+                                                    class="material-symbols-outlined text-sm">arrow_forward</span></a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Dashboard Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // ── Auth check ─────────────────────────────────────────────
+            const raw = localStorage.getItem('mediora_user');
+            if (!raw) { window.location.href = '/login.html'; return; }
+            const user = JSON.parse(raw);
+
+            // ── Greeting ───────────────────────────────────────────────
+            const greeting = document.getElementById('header-greeting');
+            if (greeting) greeting.textContent = `Welcome, ${user.name}`;
+
+            // ── Conditional rendering for User A (Budi = clean slate) ─
+            if (user.id === 'budi') {
+                // Hide appointment & billing cards, show empty states
+                document.getElementById('appointment-card').classList.add('hidden');
+                document.getElementById('appointment-empty').classList.remove('hidden');
+                document.getElementById('billing-card').classList.add('hidden');
+                document.getElementById('billing-empty').classList.remove('hidden');
+            }
+
+            // ── Logout ─────────────────────────────────────────────────
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                localStorage.removeItem('mediora_user');
+                window.location.href = '/login.html';
+            });
+        });
+    </script>
+</body>
+
+</html>

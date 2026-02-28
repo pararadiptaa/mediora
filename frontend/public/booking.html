@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Mediora — Book Appointment</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { "primary": "#137fec", "background-light": "#f6f7f8" },
+                    fontFamily: { "display": ["Inter", "sans-serif"] },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+</head>
+
+<body class="bg-background-light text-slate-900 font-display antialiased">
+    <div class="relative flex h-screen w-full flex-row overflow-hidden bg-background-light">
+        <!-- Sidebar -->
+        <aside class="flex h-full w-64 flex-col border-r border-slate-200 bg-white">
+            <div class="flex h-full flex-col justify-between p-4">
+                <div class="flex flex-col gap-4">
+                    <div class="flex items-center gap-3 px-2 py-2">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-white">
+                            <span class="material-symbols-outlined text-2xl">local_hospital</span>
+                        </div>
+                        <h1 class="text-slate-900 text-lg font-bold leading-normal">Mediora</h1>
+                    </div>
+                    <nav class="flex flex-col gap-2">
+                        <a class="flex items-center gap-3 rounded-lg px-3 py-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                            href="/dashboard.html">
+                            <span class="material-symbols-outlined">dashboard</span>
+                            <p class="text-sm font-medium leading-normal">Dashboard</p>
+                        </a>
+                        <a class="flex items-center gap-3 rounded-lg bg-primary/10 px-3 py-3 text-primary"
+                            href="/booking.html">
+                            <span class="material-symbols-outlined fill-1">calendar_month</span>
+                            <p class="text-sm font-medium leading-normal">Appointments</p>
+                        </a>
+                        <a class="flex items-center gap-3 rounded-lg px-3 py-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                            href="/records.html">
+                            <span class="material-symbols-outlined">description</span>
+                            <p class="text-sm font-medium leading-normal">Medical Records</p>
+                        </a>
+                        <a class="flex items-center gap-3 rounded-lg px-3 py-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                            href="/billing.html">
+                            <span class="material-symbols-outlined">credit_card</span>
+                            <p class="text-sm font-medium leading-normal">Billing</p>
+                        </a>
+                    </nav>
+                </div>
+                <button id="logout-btn"
+                    class="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-slate-100 py-3 text-slate-700 hover:bg-slate-200 transition-colors text-sm font-bold">
+                    <span class="material-symbols-outlined">logout</span>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex flex-1 flex-col h-full overflow-y-auto bg-background-light">
+            <header
+                class="sticky top-0 z-10 flex w-full items-center justify-between border-b border-slate-200 bg-white px-8 py-4">
+                <div class="flex items-center gap-4">
+                    <h2 class="text-slate-900 text-xl font-bold leading-tight" id="header-title">Book Appointment</h2>
+                </div>
+                <div class="flex items-center gap-6">
+                    <button
+                        class="relative flex h-10 w-10 items-center justify-center rounded-full bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-primary transition-colors">
+                        <span class="material-symbols-outlined">notifications</span>
+                        <span
+                            class="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-white"></span>
+                    </button>
+                    <div class="h-10 w-10 rounded-full bg-slate-200 bg-cover bg-center"
+                        style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD3f6TgcilXJG5olVoR0T_EVRXYTj85n0Oq4lBrrweQhWkdzUKrgGBZXFjLPzhG2sbAaCpUYMEtJi7ZMGnDv1jXtKMYwFkZrq4zYT5FSvc9dtvsVvds2MycnB0jw2Yj0VU6nui_dEw1_NlCJYjIgMqIdgszmX_H-r56m_p_rb97YuUmjjTKIT4ieZ95MAIQBZL5PS6io2jWYVNMUxI-dfNvTjGUoLe-FrtVWTtN7p-r7NiuOvixffFfSAEr5D-WBm3Occ_nv6WdHguf');">
+                    </div>
+                </div>
+            </header>
+
+            <div class="flex-1 p-8">
+                <div class="mx-auto max-w-5xl">
+                    <!-- Breadcrumb & Title -->
+                    <div class="mb-10 flex flex-col gap-2">
+                        <div class="flex items-center gap-2 text-sm text-slate-500">
+                            <span>Appointments</span>
+                            <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                            <span class="font-medium text-primary" id="breadcrumb-action">Book New</span>
+                        </div>
+                        <h2 class="text-3xl font-bold text-slate-900 tracking-tight" id="page-title">Book New
+                            Appointment</h2>
+                        <p class="text-slate-500" id="page-subtitle">Schedule a visit with one of our specialists at
+                            your convenience.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        <!-- Left Column: Form -->
+                        <div class="lg:col-span-7 flex flex-col gap-8">
+                            <!-- Step 1: Specialty & Doctor -->
+                            <div class="rounded-xl bg-white p-6 shadow-sm border border-slate-200">
+                                <h3 class="mb-6 text-lg font-semibold text-slate-900 flex items-center gap-2">
+                                    <span
+                                        class="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs text-primary font-bold">1</span>
+                                    Select Details
+                                </h3>
+                                <div class="space-y-6">
+                                    <div class="flex flex-col gap-2">
+                                        <label class="text-sm font-medium text-slate-700">Medical Specialty</label>
+                                        <div class="relative">
+                                            <select id="specialty-select"
+                                                class="w-full appearance-none rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 pr-10 text-slate-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
+                                                <option disabled selected value="">Select a specialty...</option>
+                                                <option value="cardiology">Cardiology</option>
+                                                <option value="dental">Dental</option>
+                                                <option value="general">General Practice</option>
+                                                <option value="dermatology">Dermatology</option>
+                                                <option value="neurology">Neurology</option>
+                                            </select>
+                                            <div
+                                                class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                                                <span class="material-symbols-outlined">expand_more</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-col gap-2">
+                                        <label class="text-sm font-medium text-slate-700">Select Doctor</label>
+                                        <div class="relative">
+                                            <select id="doctor-select"
+                                                class="w-full appearance-none rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 pr-10 text-slate-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary">
+                                                <option disabled selected value="">Choose a specialty first...</option>
+                                            </select>
+                                            <div
+                                                class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                                                <span class="material-symbols-outlined">expand_more</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-col gap-2">
+                                        <label class="text-sm font-medium text-slate-700">Reason for Visit
+                                            (Optional)</label>
+                                        <textarea id="visit-reason"
+                                            class="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                            placeholder="Briefly describe your symptoms or reason for visit..."
+                                            rows="3"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Step 2: Date & Time -->
+                            <div class="rounded-xl bg-white p-6 shadow-sm border border-slate-200">
+                                <h3 class="mb-6 text-lg font-semibold text-slate-900 flex items-center gap-2">
+                                    <span
+                                        class="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs text-primary font-bold">2</span>
+                                    Date &amp; Time
+                                </h3>
+                                <div class="flex flex-col gap-6">
+                                    <div class="flex items-center justify-between">
+                                        <h4 class="font-medium text-slate-900" id="calendar-month-label">October 2023
+                                        </h4>
+                                        <div class="flex gap-2">
+                                            <button
+                                                class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200"><span
+                                                    class="material-symbols-outlined text-sm">chevron_left</span></button>
+                                            <button
+                                                class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200"><span
+                                                    class="material-symbols-outlined text-sm">chevron_right</span></button>
+                                        </div>
+                                    </div>
+                                    <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center">
+                                        <div class="py-2 text-xs font-semibold text-slate-400">Sun</div>
+                                        <div class="py-2 text-xs font-semibold text-slate-400">Mon</div>
+                                        <div class="py-2 text-xs font-semibold text-slate-400">Tue</div>
+                                        <div class="py-2 text-xs font-semibold text-slate-400">Wed</div>
+                                        <div class="py-2 text-xs font-semibold text-slate-400">Thu</div>
+                                        <div class="py-2 text-xs font-semibold text-slate-400">Fri</div>
+                                        <div class="py-2 text-xs font-semibold text-slate-400">Sat</div>
+                                        <div class="p-2"></div>
+                                        <div class="p-2"></div>
+                                        <div class="p-2"></div>
+                                        <button data-day="1"
+                                            class="cal-day rounded-lg p-2 text-sm text-slate-600 hover:bg-slate-50">1</button>
+                                        <button data-day="2"
+                                            class="cal-day rounded-lg p-2 text-sm text-slate-600 hover:bg-slate-50">2</button>
+                                        <button data-day="3"
+                                            class="cal-day rounded-lg p-2 text-sm text-slate-600 hover:bg-slate-50">3</button>
+                                        <button data-day="4"
+                                            class="cal-day rounded-lg p-2 text-sm text-slate-600 hover:bg-slate-50">4</button>
+                                        <button data-day="5"
+                                            class="cal-day rounded-lg p-2 text-sm font-semibold bg-primary text-white shadow-md shadow-primary/30">5</button>
+                                        <button data-day="6"
+                                            class="cal-day rounded-lg p-2 text-sm text-slate-600 hover:bg-slate-50">6</button>
+                                        <button data-day="7"
+                                            class="cal-day rounded-lg p-2 text-sm text-slate-600 hover:bg-slate-50">7</button>
+                                        <button data-day="8"
+                                            class="cal-day rounded-lg p-2 text-sm text-slate-600 hover:bg-slate-50">8</button>
+                                        <button data-day="9"
+                                            class="cal-day rounded-lg p-2 text-sm text-slate-600 hover:bg-slate-50">9</button>
+                                        <button data-day="10"
+                                            class="cal-day rounded-lg p-2 text-sm text-slate-600 hover:bg-slate-50">10</button>
+                                        <button data-day="11"
+                                            class="cal-day rounded-lg p-2 text-sm text-slate-600 hover:bg-slate-50">11</button>
+                                        <button data-day="12"
+                                            class="cal-day rounded-lg p-2 text-sm text-slate-600 hover:bg-slate-50">12</button>
+                                        <button data-day="13"
+                                            class="cal-day rounded-lg p-2 text-sm text-slate-600 hover:bg-slate-50">13</button>
+                                        <button data-day="14"
+                                            class="cal-day rounded-lg p-2 text-sm text-slate-600 hover:bg-slate-50">14</button>
+                                        <button data-day="15"
+                                            class="cal-day rounded-lg p-2 text-sm text-slate-600 hover:bg-slate-50">15</button>
+                                        <button data-day="16"
+                                            class="cal-day rounded-lg p-2 text-sm text-slate-600 hover:bg-slate-50">16</button>
+                                        <button data-day="17"
+                                            class="cal-day rounded-lg p-2 text-sm text-slate-600 hover:bg-slate-50">17</button>
+                                        <button data-day="18"
+                                            class="cal-day rounded-lg p-2 text-sm text-slate-600 hover:bg-slate-50">18</button>
+                                        <button data-day="19"
+                                            class="cal-day rounded-lg p-2 text-sm text-slate-600 hover:bg-slate-50">19</button>
+                                        <button data-day="20"
+                                            class="cal-day rounded-lg p-2 text-sm text-slate-600 hover:bg-slate-50">20</button>
+                                        <button data-day="21"
+                                            class="cal-day rounded-lg p-2 text-sm text-slate-600 hover:bg-slate-50">21</button>
+                                        <button data-day="22"
+                                            class="cal-day rounded-lg p-2 text-sm text-slate-600 hover:bg-slate-50">22</button>
+                                        <button data-day="23"
+                                            class="cal-day rounded-lg p-2 text-sm text-slate-600 hover:bg-slate-50">23</button>
+                                        <button data-day="24"
+                                            class="cal-day rounded-lg p-2 text-sm text-slate-600 hover:bg-slate-50">24</button>
+                                        <button data-day="25"
+                                            class="cal-day rounded-lg p-2 text-sm text-slate-600 hover:bg-slate-50">25</button>
+                                        <button data-day="26"
+                                            class="cal-day rounded-lg p-2 text-sm text-slate-600 hover:bg-slate-50">26</button>
+                                        <button data-day="27"
+                                            class="cal-day rounded-lg p-2 text-sm text-slate-600 hover:bg-slate-50">27</button>
+                                        <button data-day="28"
+                                            class="cal-day rounded-lg p-2 text-sm text-slate-600 hover:bg-slate-50">28</button>
+                                        <button data-day="29"
+                                            class="cal-day rounded-lg p-2 text-sm text-slate-600 hover:bg-slate-50">29</button>
+                                        <button data-day="30"
+                                            class="cal-day rounded-lg p-2 text-sm text-slate-600 hover:bg-slate-50">30</button>
+                                    </div>
+                                    <div class="mt-4 border-t border-slate-100 pt-6">
+                                        <label class="mb-3 block text-sm font-medium text-slate-700">Available
+                                            Slots</label>
+                                        <div id="time-slots" class="flex flex-wrap gap-2">
+                                            <button data-time="09:00 AM"
+                                                class="time-slot rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:border-primary hover:text-primary">09:00
+                                                AM</button>
+                                            <button data-time="09:30 AM"
+                                                class="time-slot rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:border-primary hover:text-primary">09:30
+                                                AM</button>
+                                            <button data-time="10:15 AM"
+                                                class="time-slot rounded-full bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm ring-2 ring-primary ring-offset-2 active-slot">10:15
+                                                AM</button>
+                                            <button data-time="11:00 AM"
+                                                class="time-slot rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:border-primary hover:text-primary">11:00
+                                                AM</button>
+                                            <button data-time="02:00 PM"
+                                                class="time-slot rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:border-primary hover:text-primary">02:00
+                                                PM</button>
+                                            <button data-time="04:30 PM"
+                                                class="time-slot rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:border-primary hover:text-primary">04:30
+                                                PM</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Summary & Confirm -->
+                        <div class="lg:col-span-5">
+                            <div class="sticky top-6 flex flex-col gap-6">
+                                <div class="overflow-hidden rounded-xl bg-white shadow-sm border border-slate-200">
+                                    <div class="bg-slate-50 px-6 py-4">
+                                        <h3 class="font-semibold text-slate-900">Booking Summary</h3>
+                                    </div>
+                                    <div class="flex flex-col gap-4 p-6">
+                                        <div class="flex items-start gap-4">
+                                            <div
+                                                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-primary">
+                                                <span class="material-symbols-outlined">stethoscope</span>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-slate-500">Specialty</p>
+                                                <p class="font-medium text-slate-900" id="summary-specialty">—</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-start gap-4">
+                                            <div
+                                                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-primary">
+                                                <span class="material-symbols-outlined">person</span>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-slate-500">Doctor</p>
+                                                <p class="font-medium text-slate-900" id="summary-doctor">—</p>
+                                            </div>
+                                        </div>
+                                        <div class="h-px bg-slate-100"></div>
+                                        <div class="flex items-start gap-4">
+                                            <div
+                                                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-primary">
+                                                <span class="material-symbols-outlined">calendar_today</span>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-slate-500">Date &amp; Time</p>
+                                                <p class="font-medium text-slate-900" id="summary-date">Oct 5, 2023</p>
+                                                <p class="text-xs text-slate-500" id="summary-time">10:15 AM</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-start gap-4">
+                                            <div
+                                                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-primary">
+                                                <span class="material-symbols-outlined">location_on</span>
+                                            </div>
+                                            <div>
+                                                <p class="text-xs text-slate-500">Location</p>
+                                                <p class="font-medium text-slate-900">Mediora Main Clinic</p>
+                                                <p class="text-xs text-slate-500">Room 302, 3rd Floor</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="bg-slate-50 px-6 py-4">
+                                        <div
+                                            class="flex items-center gap-2 rounded-lg bg-blue-50 p-3 text-sm text-blue-700">
+                                            <span class="material-symbols-outlined text-base">info</span>
+                                            <span class="flex-1">Please arrive 15 minutes early.</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button id="confirm-booking-btn"
+                                    class="w-full rounded-xl bg-primary py-4 text-center font-semibold text-white shadow-lg shadow-primary/30 transition-all hover:bg-blue-600 hover:shadow-xl hover:shadow-primary/40 focus:ring-4 focus:ring-primary/30">
+                                    Confirm Booking
+                                </button>
+                                <a href="/dashboard.html"
+                                    class="w-full rounded-xl border border-slate-200 py-3 text-center font-semibold text-slate-600 hover:bg-slate-50 block">
+                                    Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Booking Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // ── Auth ───────────────────────────────────────────────────
+            const raw = localStorage.getItem('mediora_user');
+            if (!raw) { window.location.href = '/login.html'; return; }
+            const user = JSON.parse(raw);
+
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                localStorage.removeItem('mediora_user');
+                window.location.href = '/login.html';
+            });
+
+            // ── Reschedule mode detection ────────────────────────────
+            const params = new URLSearchParams(window.location.search);
+            const isReschedule = params.get('reschedule') === 'true';
+
+            if (isReschedule) {
+                document.title = 'Mediora — Update Appointment';
+                document.getElementById('header-title').textContent = 'Update Appointment';
+                document.getElementById('page-title').textContent = 'Update Appointment';
+                document.getElementById('page-subtitle').textContent = 'Change the date, time, or doctor for your existing appointment.';
+                document.getElementById('breadcrumb-action').textContent = 'Reschedule';
+                document.getElementById('confirm-booking-btn').textContent = 'Update Appointment';
+            }
+
+            // ── Doctor database (keyed by specialty) ───────────────────
+            const DOCTORS = {
+                cardiology: [
+                    { value: 'dr-tirta', label: 'Dr. Tirta — Cardiology' },
+                    { value: 'dr-smith', label: 'Dr. Sarah Smith — Cardiology' },
+                ],
+                dental: [
+                    { value: 'dr-sisca', label: 'Dr. Sisca — Orthodontics' },
+                    { value: 'dr-lim', label: 'Dr. Lim — Periodontics' },
+                ],
+                general: [
+                    { value: 'dr-jones', label: 'Dr. Michael Jones — General' },
+                    { value: 'dr-williams', label: 'Dr. Emily Williams — General' },
+                ],
+                dermatology: [
+                    { value: 'dr-patel', label: 'Dr. Patel — Dermatology' },
+                ],
+                neurology: [
+                    { value: 'dr-wong', label: 'Dr. Wong — Neurology' },
+                    { value: 'dr-chaos', label: 'Dr. Chaos — Neurology' },
+                ],
+            };
+
+            const specialtyEl = document.getElementById('specialty-select');
+            const doctorEl = document.getElementById('doctor-select');
+
+            // ── Specialty → Doctor cascade ─────────────────────────────
+            specialtyEl.addEventListener('change', () => {
+                const docs = DOCTORS[specialtyEl.value] || [];
+                doctorEl.innerHTML = '<option disabled selected value="">Choose a physician...</option>';
+                docs.forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d.value;
+                    opt.textContent = d.label;
+                    doctorEl.appendChild(opt);
+                });
+                updateSummary();
+            });
+
+            doctorEl.addEventListener('change', updateSummary);
+
+            // ── Calendar day selection ──────────────────────────────────
+            let selectedDay = 5;
+            let selectedTime = '10:15 AM';
+
+            document.querySelectorAll('.cal-day').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.cal-day').forEach(b => {
+                        b.className = 'cal-day rounded-lg p-2 text-sm text-slate-600 hover:bg-slate-50';
+                    });
+                    btn.className = 'cal-day rounded-lg p-2 text-sm font-semibold bg-primary text-white shadow-md shadow-primary/30';
+                    selectedDay = parseInt(btn.dataset.day);
+                    updateSummary();
+                });
+            });
+
+            // ── Time slot selection ─────────────────────────────────────
+            document.querySelectorAll('.time-slot').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.time-slot').forEach(b => {
+                        b.className = 'time-slot rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:border-primary hover:text-primary';
+                    });
+                    btn.className = 'time-slot rounded-full bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm ring-2 ring-primary ring-offset-2 active-slot';
+                    selectedTime = btn.dataset.time;
+                    updateSummary();
+                });
+            });
+
+            // ── Live summary update ─────────────────────────────────────
+            function updateSummary() {
+                const specText = specialtyEl.options[specialtyEl.selectedIndex]?.text || '—';
+                const docText = doctorEl.value ? doctorEl.options[doctorEl.selectedIndex]?.text : '—';
+                document.getElementById('summary-specialty').textContent = specText === 'Select a specialty...' ? '—' : specText;
+                document.getElementById('summary-doctor').textContent = docText === 'Choose a physician...' ? '—' : docText;
+                document.getElementById('summary-date').textContent = `Oct ${selectedDay}, 2023`;
+                document.getElementById('summary-time').textContent = selectedTime;
+            }
+
+            // ── Confirm Booking / Update Appointment ────────────────────
+            const bookBtn = document.getElementById('confirm-booking-btn');
+            bookBtn.addEventListener('click', async () => {
+                const specialty = specialtyEl.value;
+                const doctor = doctorEl.value;
+
+                if (!specialty || !doctor) {
+                    alert('⚠️ Please select a specialty and doctor before booking.');
+                    return;
+                }
+
+                // ── Forced error for "Dr. Chaos" ────────────────────────
+                if (doctor === 'dr-chaos') {
+                    bookBtn.disabled = true;
+                    bookBtn.textContent = 'Booking…';
+                    await new Promise(r => setTimeout(r, 800));
+                    alert('❌ Booking failed!\n\nDr. Chaos is currently unavailable due to a system error.\n(Error: SIMULATED_CHAOS_FAILURE)');
+                    bookBtn.disabled = false;
+                    bookBtn.textContent = isReschedule ? 'Update Appointment' : 'Confirm Booking';
+                    return;
+                }
+
+                // ── Reschedule mode: update localStorage & redirect ─────
+                if (isReschedule) {
+                    const docLabel = doctorEl.options[doctorEl.selectedIndex]?.text || doctor;
+                    localStorage.setItem('mediora_last_appointment', JSON.stringify({
+                        id: 'APT-' + Date.now(),
+                        doctor: docLabel.split('—')[0].trim(),
+                        specialty: specialtyEl.options[specialtyEl.selectedIndex]?.text || specialty,
+                        date: `Oct ${selectedDay}, 2023`,
+                        time: selectedTime,
+                        reason: document.getElementById('visit-reason').value || '',
+                    }));
+                    alert('✅ Appointment Rescheduled Successfully!');
+                    window.location.href = '/dashboard.html';
+                    return;
+                }
+
+                // ── Normal booking: hit API ─────────────────────────────
+                bookBtn.disabled = true;
+                bookBtn.textContent = 'Booking…';
+
+                try {
+                    const res = await fetch('/api/appointments/book', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-User-ID': user.id,
+                        },
+                        body: JSON.stringify({
+                            specialty,
+                            doctor,
+                            reason: document.getElementById('visit-reason').value || '',
+                        }),
+                    });
+                    const data = await res.json();
+                    console.log('[Mediora] Appointment response:', data);
+
+                    if (data.success) {
+                        localStorage.setItem('mediora_last_appointment', JSON.stringify({
+                            id: data.appointment.id,
+                            doctor: data.appointment.doctor,
+                            specialty: data.appointment.specialty,
+                            date: `Oct ${selectedDay}, 2023`,
+                            time: selectedTime,
+                            billing: data.billing,
+                        }));
+                        window.location.href = '/billing.html';
+                    } else {
+                        alert(`❌ Booking failed.\n\n${data.message}`);
+                    }
+                } catch (err) {
+                    console.error('[Mediora] Appointment error:', err);
+                    alert('❌ Network error — could not reach server.');
+                } finally {
+                    bookBtn.disabled = false;
+                    bookBtn.textContent = isReschedule ? 'Update Appointment' : 'Confirm Booking';
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

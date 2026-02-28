@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Mediora — Payment Failed</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { "primary": "#137fec", "background-light": "#f6f7f8" },
+                    fontFamily: { "display": ["Inter", "sans-serif"] },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+</head>
+
+<body
+    class="bg-background-light text-slate-900 font-display antialiased min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-10 text-center">
+        <!-- Error Icon -->
+        <div class="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-red-100">
+            <span class="material-symbols-outlined text-5xl text-red-600 fill-1">error</span>
+        </div>
+
+        <h1 class="text-2xl font-bold text-slate-900 mb-2">Payment Declined</h1>
+        <p class="text-slate-500 mb-6">Your card was declined. Please try a different payment method or contact your
+            bank.</p>
+
+        <!-- Error Details -->
+        <div class="bg-red-50 rounded-xl p-4 mb-8 text-left space-y-2 border border-red-100">
+            <div class="flex justify-between text-sm">
+                <span class="text-slate-500">Error Code</span>
+                <span class="font-medium text-red-600" id="error-code">CARD_DECLINED</span>
+            </div>
+            <div class="flex justify-between text-sm">
+                <span class="text-slate-500">Invoice</span>
+                <span class="font-medium text-slate-900">INV-2023-001</span>
+            </div>
+            <div class="flex justify-between text-sm">
+                <span class="text-slate-500">Amount</span>
+                <span class="font-medium text-slate-900">$150.00 USD</span>
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-3">
+            <a href="/billing.html"
+                class="w-full rounded-lg bg-primary py-3 text-sm font-bold text-white shadow-md shadow-primary/20 hover:bg-blue-600 transition-colors block">
+                Try Again
+            </a>
+            <a href="/dashboard.html"
+                class="w-full rounded-lg border border-slate-200 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors block">
+                Return to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const raw = localStorage.getItem('mediora_last_payment');
+            if (raw) {
+                try {
+                    const data = JSON.parse(raw);
+                    const codeEl = document.getElementById('error-code');
+                    if (data.error) codeEl.textContent = data.error;
+                    else if (data.message) codeEl.textContent = data.message;
+                } catch { }
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Mediora — Appointment Details</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { "primary": "#137fec", "background-light": "#f6f7f8" },
+                    fontFamily: { "display": ["Inter", "sans-serif"] },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+</head>
+
+<body class="bg-background-light text-slate-900 font-display antialiased">
+    <div class="relative flex h-screen w-full flex-row overflow-hidden bg-background-light">
+        <!-- Sidebar -->
+        <aside class="flex h-full w-64 flex-col border-r border-slate-200 bg-white">
+            <div class="flex h-full flex-col justify-between p-4">
+                <div class="flex flex-col gap-4">
+                    <div class="flex items-center gap-3 px-2 py-2">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-white">
+                            <span class="material-symbols-outlined text-2xl">local_hospital</span>
+                        </div>
+                        <h1 class="text-slate-900 text-lg font-bold leading-normal">Mediora</h1>
+                    </div>
+                    <nav class="flex flex-col gap-2">
+                        <a class="flex items-center gap-3 rounded-lg bg-primary/10 px-3 py-3 text-primary"
+                            href="/dashboard.html">
+                            <span class="material-symbols-outlined fill-1">dashboard</span>
+                            <p class="text-sm font-medium leading-normal">Dashboard</p>
+                        </a>
+                        <a class="flex items-center gap-3 rounded-lg px-3 py-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                            href="/booking.html">
+                            <span class="material-symbols-outlined">calendar_month</span>
+                            <p class="text-sm font-medium leading-normal">Appointments</p>
+                        </a>
+                        <a class="flex items-center gap-3 rounded-lg px-3 py-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                            href="/records.html">
+                            <span class="material-symbols-outlined">description</span>
+                            <p class="text-sm font-medium leading-normal">Medical Records</p>
+                        </a>
+                        <a class="flex items-center gap-3 rounded-lg px-3 py-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                            href="/billing.html">
+                            <span class="material-symbols-outlined">credit_card</span>
+                            <p class="text-sm font-medium leading-normal">Billing</p>
+                        </a>
+                    </nav>
+                </div>
+                <button id="logout-btn"
+                    class="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-slate-100 py-3 text-slate-700 hover:bg-slate-200 transition-colors text-sm font-bold">
+                    <span class="material-symbols-outlined">logout</span>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex flex-1 flex-col h-full overflow-y-auto bg-background-light">
+            <header
+                class="sticky top-0 z-10 flex w-full items-center justify-between border-b border-slate-200 bg-white px-8 py-4">
+                <div class="flex items-center gap-4">
+                    <a href="/dashboard.html"
+                        class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 transition-colors">
+                        <span class="material-symbols-outlined text-lg">arrow_back</span>
+                    </a>
+                    <h2 class="text-slate-900 text-xl font-bold leading-tight">Appointment Details</h2>
+                </div>
+                <div class="flex items-center gap-6">
+                    <button
+                        class="relative flex h-10 w-10 items-center justify-center rounded-full bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-primary transition-colors">
+                        <span class="material-symbols-outlined">notifications</span>
+                        <span
+                            class="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-white"></span>
+                    </button>
+                    <div class="h-10 w-10 rounded-full bg-slate-200 bg-cover bg-center"
+                        style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD3f6TgcilXJG5olVoR0T_EVRXYTj85n0Oq4lBrrweQhWkdzUKrgGBZXFjLPzhG2sbAaCpUYMEtJi7ZMGnDv1jXtKMYwFkZrq4zYT5FSvc9dtvsVvds2MycnB0jw2Yj0VU6nui_dEw1_NlCJYjIgMqIdgszmX_H-r56m_p_rb97YuUmjjTKIT4ieZ95MAIQBZL5PS6io2jWYVNMUxI-dfNvTjGUoLe-FrtVWTtN7p-r7NiuOvixffFfSAEr5D-WBm3Occ_nv6WdHguf');">
+                    </div>
+                </div>
+            </header>
+
+            <div class="flex-1 p-8">
+                <div class="mx-auto max-w-3xl space-y-8">
+                    <!-- Appointment Card -->
+                    <div class="rounded-xl bg-white shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="bg-gradient-to-r from-primary to-blue-600 p-6 text-white">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-blue-100 text-sm font-medium">Upcoming Appointment</p>
+                                    <h1 class="text-2xl font-bold mt-1" id="appt-doctor">Dr. Tirta</h1>
+                                    <p class="text-blue-200 mt-1" id="appt-specialty">Cardiology Specialist</p>
+                                </div>
+                                <div class="h-16 w-16 rounded-full bg-white/20 flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-3xl">person</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-primary">calendar_today</span>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-slate-500">Date</p>
+                                        <p class="font-medium text-slate-900" id="appt-date">Oct 5, 2023</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <div class="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-primary">schedule</span>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-slate-500">Time</p>
+                                        <p class="font-medium text-slate-900" id="appt-time">10:15 AM</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <div class="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-primary">location_on</span>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-slate-500">Location</p>
+                                        <p class="font-medium text-slate-900">Room 304, Main Building</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <div class="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-primary">badge</span>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-slate-500">Appointment ID</p>
+                                        <p class="font-medium text-slate-900" id="appt-id">APT-001</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reason for Visit -->
+                    <div class="rounded-xl bg-white p-6 shadow-sm border border-slate-200">
+                        <h3 class="font-bold text-slate-900 text-lg mb-3 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-slate-400">clinical_notes</span>
+                            Reason for Visit
+                        </h3>
+                        <p class="text-sm text-slate-700 bg-slate-50 rounded-lg p-4 leading-relaxed" id="appt-reason">
+                            Routine follow-up cardiology consultation. Patient reported occasional chest tightness
+                            during exercise. Review of recent ECG results and medication adjustment if needed.
+                        </p>
+                    </div>
+
+                    <!-- Pre-Visit Instructions -->
+                    <div class="rounded-xl bg-white p-6 shadow-sm border border-slate-200">
+                        <h3 class="font-bold text-slate-900 text-lg mb-3 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-slate-400">checklist</span>
+                            Pre-Visit Instructions
+                        </h3>
+                        <ul class="space-y-3 text-sm text-slate-700">
+                            <li class="flex items-start gap-3">
+                                <span
+                                    class="material-symbols-outlined text-green-500 text-lg mt-0.5">check_circle</span>
+                                Bring your insurance card and a valid photo ID
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span
+                                    class="material-symbols-outlined text-green-500 text-lg mt-0.5">check_circle</span>
+                                Arrive 15 minutes before your scheduled time
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span
+                                    class="material-symbols-outlined text-green-500 text-lg mt-0.5">check_circle</span>
+                                Bring a list of your current medications
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="material-symbols-outlined text-amber-500 text-lg mt-0.5">info</span>
+                                Fast for 8 hours if lab work is required
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex gap-3">
+                        <a href="/dashboard.html"
+                            class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+                            <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                            Back to Dashboard
+                        </a>
+                        <a id="reschedule-link" href="/booking.html?reschedule=true"
+                            class="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-primary/20 hover:bg-blue-600 transition-colors">
+                            <span class="material-symbols-outlined text-[18px]">edit_calendar</span>
+                            Reschedule
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const raw = localStorage.getItem('mediora_user');
+            if (!raw) { window.location.href = '/login.html'; return; }
+
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                localStorage.removeItem('mediora_user');
+                window.location.href = '/login.html';
+            });
+
+            // Populate from localStorage if available
+            const apptRaw = localStorage.getItem('mediora_last_appointment');
+            if (apptRaw) {
+                try {
+                    const appt = JSON.parse(apptRaw);
+                    if (appt.doctor) document.getElementById('appt-doctor').textContent = appt.doctor;
+                    if (appt.specialty) document.getElementById('appt-specialty').textContent = appt.specialty + ' Specialist';
+                    if (appt.date) document.getElementById('appt-date').textContent = appt.date;
+                    if (appt.time) document.getElementById('appt-time').textContent = appt.time;
+                    if (appt.id) document.getElementById('appt-id').textContent = appt.id;
+                } catch { }
+            }
+        });
+    </script>
+</body>
+
+</html>

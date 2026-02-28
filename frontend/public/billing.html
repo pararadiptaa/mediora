@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Mediora — Billing &amp; Payments</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { "primary": "#137fec", "background-light": "#f6f7f8" },
+                    fontFamily: { "display": ["Inter", "sans-serif"] },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+</head>
+
+<body class="bg-background-light text-slate-900 font-display antialiased">
+    <div class="relative flex h-screen w-full flex-row overflow-hidden bg-background-light">
+        <!-- Sidebar -->
+        <aside class="flex h-full w-64 flex-col border-r border-slate-200 bg-white">
+            <div class="flex h-full flex-col justify-between p-4">
+                <div class="flex flex-col gap-4">
+                    <div class="flex items-center gap-3 px-2 py-2">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-white">
+                            <span class="material-symbols-outlined text-2xl">local_hospital</span>
+                        </div>
+                        <h1 class="text-slate-900 text-lg font-bold leading-normal">Mediora</h1>
+                    </div>
+                    <nav class="flex flex-col gap-2">
+                        <a class="flex items-center gap-3 rounded-lg px-3 py-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                            href="/dashboard.html">
+                            <span class="material-symbols-outlined">dashboard</span>
+                            <p class="text-sm font-medium leading-normal">Dashboard</p>
+                        </a>
+                        <a class="flex items-center gap-3 rounded-lg px-3 py-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                            href="/booking.html">
+                            <span class="material-symbols-outlined">calendar_month</span>
+                            <p class="text-sm font-medium leading-normal">Appointments</p>
+                        </a>
+                        <a class="flex items-center gap-3 rounded-lg px-3 py-3 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                            href="/records.html">
+                            <span class="material-symbols-outlined">description</span>
+                            <p class="text-sm font-medium leading-normal">Medical Records</p>
+                        </a>
+                        <a class="flex items-center gap-3 rounded-lg bg-primary/10 px-3 py-3 text-primary"
+                            href="/billing.html">
+                            <span class="material-symbols-outlined fill-1">credit_card</span>
+                            <p class="text-sm font-medium leading-normal">Billing</p>
+                        </a>
+                    </nav>
+                </div>
+                <button id="logout-btn"
+                    class="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-slate-100 py-3 text-slate-700 hover:bg-slate-200 transition-colors text-sm font-bold">
+                    <span class="material-symbols-outlined">logout</span>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex flex-1 flex-col h-full overflow-y-auto bg-background-light">
+            <header
+                class="sticky top-0 z-10 flex w-full items-center justify-between border-b border-slate-200 bg-white px-8 py-4">
+                <div class="flex items-center gap-4">
+                    <h2 class="text-slate-900 text-xl font-bold leading-tight">Billing &amp; Payments</h2>
+                </div>
+                <div class="flex items-center gap-6">
+                    <button
+                        class="relative flex h-10 w-10 items-center justify-center rounded-full bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-primary transition-colors">
+                        <span class="material-symbols-outlined">notifications</span>
+                        <span
+                            class="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-white"></span>
+                    </button>
+                    <div class="h-10 w-10 rounded-full bg-slate-200 bg-cover bg-center"
+                        style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD3f6TgcilXJG5olVoR0T_EVRXYTj85n0Oq4lBrrweQhWkdzUKrgGBZXFjLPzhG2sbAaCpUYMEtJi7ZMGnDv1jXtKMYwFkZrq4zYT5FSvc9dtvsVvds2MycnB0jw2Yj0VU6nui_dEw1_NlCJYjIgMqIdgszmX_H-r56m_p_rb97YuUmjjTKIT4ieZ95MAIQBZL5PS6io2jWYVNMUxI-dfNvTjGUoLe-FrtVWTtN7p-r7NiuOvixffFfSAEr5D-WBm3Occ_nv6WdHguf');">
+                    </div>
+                </div>
+            </header>
+
+            <div class="flex-1 p-6 md:p-10 max-w-7xl mx-auto w-full">
+                <!-- Hero / Balance -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div
+                        class="md:col-span-2 bg-gradient-to-br from-primary to-blue-600 rounded-xl p-8 text-white shadow-lg relative overflow-hidden">
+                        <div
+                            class="absolute top-0 right-0 p-32 bg-white/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none">
+                        </div>
+                        <div class="relative z-10 flex flex-col justify-between h-full">
+                            <div>
+                                <p class="text-blue-100 font-medium mb-1 flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-sm">account_balance_wallet</span>
+                                    Total Outstanding Balance
+                                </p>
+                                <h2 class="text-4xl md:text-5xl font-bold tracking-tight mb-2">$150.00</h2>
+                                <p class="text-blue-100 text-sm">Due Date: Oct 24, 2023</p>
+                            </div>
+                            <div class="mt-8 flex gap-3">
+                                <div
+                                    class="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-lg text-sm font-medium border border-white/10">
+                                    Invoice #INV-2023-001</div>
+                                <div
+                                    class="px-3 py-1 bg-yellow-400/20 text-yellow-100 backdrop-blur-sm rounded-lg text-sm font-medium border border-yellow-400/30">
+                                    Pending Payment</div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Payment Summary -->
+                    <div
+                        class="bg-white rounded-xl border border-slate-200 p-6 flex flex-col justify-between shadow-sm">
+                        <div>
+                            <h3 class="text-slate-900 font-bold text-lg mb-4">Payment Summary</h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-slate-500">Consultation Fee</span>
+                                    <span class="text-slate-900 font-medium">$120.00</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-slate-500">Lab Tests</span>
+                                    <span class="text-slate-900 font-medium">$30.00</span>
+                                </div>
+                                <div class="h-px bg-slate-100 my-2"></div>
+                                <div class="flex justify-between text-base">
+                                    <span class="text-slate-900 font-semibold">Total</span>
+                                    <span class="text-primary font-bold">$150.00</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="download-invoice-btn"
+                            class="mt-6 w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined text-[18px]">download</span>
+                            Download Invoice PDF
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Payment Form (full width — no right column) -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="border-b border-slate-100 px-6 py-4 flex items-center justify-between bg-slate-50/50">
+                        <h3 class="text-slate-900 font-bold text-lg flex items-center gap-2">
+                            <span class="material-symbols-outlined text-slate-400">lock</span>
+                            Secure Payment
+                        </h3>
+                        <div class="flex gap-2 text-slate-400">
+                            <span class="material-symbols-outlined" title="Visa">credit_card</span>
+                        </div>
+                    </div>
+                    <div class="p-6 md:p-8">
+                        <!-- ═══ Mock CC Quick-Fill Buttons ═══ -->
+                        <div class="flex gap-3 mb-6">
+                            <button id="fill-valid-cc"
+                                class="inline-flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-sm font-semibold text-green-700 hover:bg-green-100 transition-colors">
+                                <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                                Fill Valid CC
+                            </button>
+                            <button id="fill-declined-cc"
+                                class="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 transition-colors">
+                                <span class="material-symbols-outlined text-[18px]">cancel</span>
+                                Fill Declined CC
+                            </button>
+                        </div>
+
+                        <form class="space-y-6">
+                            <div class="space-y-4">
+                                <label class="flex flex-col gap-1.5">
+                                    <span class="text-sm font-semibold text-slate-700">Cardholder Name</span>
+                                    <div class="relative">
+                                        <input id="cc-name"
+                                            class="w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-slate-900 focus:border-primary focus:ring-primary placeholder:text-slate-400 pl-10"
+                                            placeholder="e.g. Jane Doe" type="text" />
+                                        <span
+                                            class="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px]">person</span>
+                                    </div>
+                                </label>
+                                <label class="flex flex-col gap-1.5">
+                                    <span class="text-sm font-semibold text-slate-700">Card Number</span>
+                                    <div class="relative">
+                                        <input id="cc-number"
+                                            class="w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-slate-900 focus:border-primary focus:ring-primary placeholder:text-slate-400 pl-10"
+                                            placeholder="0000 0000 0000 0000" type="text" />
+                                        <span
+                                            class="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px]">credit_card</span>
+                                    </div>
+                                </label>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <label class="flex flex-col gap-1.5">
+                                        <span class="text-sm font-semibold text-slate-700">Expiry Date</span>
+                                        <div class="relative">
+                                            <input id="cc-expiry"
+                                                class="w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-slate-900 focus:border-primary focus:ring-primary placeholder:text-slate-400 pl-10"
+                                                placeholder="MM/YY" type="text" />
+                                            <span
+                                                class="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px]">calendar_today</span>
+                                        </div>
+                                    </label>
+                                    <label class="flex flex-col gap-1.5">
+                                        <span
+                                            class="text-sm font-semibold text-slate-700 flex items-center justify-between">
+                                            CVC / CVV
+                                            <span
+                                                class="material-symbols-outlined text-slate-400 text-[16px] cursor-help"
+                                                title="3 digits on back of card">help</span>
+                                        </span>
+                                        <div class="relative">
+                                            <input id="cc-cvc"
+                                                class="w-full rounded-lg border-slate-200 bg-slate-50 px-4 py-2.5 text-slate-900 focus:border-primary focus:ring-primary placeholder:text-slate-400 pl-10"
+                                                placeholder="000" type="text" maxlength="3" />
+                                            <span
+                                                class="material-symbols-outlined absolute left-3 top-2.5 text-slate-400 text-[20px]">lock</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 pt-2">
+                                <input class="rounded border-slate-300 text-primary focus:ring-primary h-4 w-4"
+                                    id="save-card" type="checkbox" />
+                                <label class="text-sm text-slate-600" for="save-card">Save card securely for future
+                                    payments</label>
+                            </div>
+                            <div class="pt-6 flex flex-col sm:flex-row items-center gap-4">
+                                <button id="process-payment-btn"
+                                    class="w-full sm:w-auto flex-1 bg-primary hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg shadow-md shadow-blue-500/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                                    type="button">
+                                    <span>Process Payment</span>
+                                    <span class="text-white/80 font-medium">($150.00)</span>
+                                    <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+                                </button>
+                            </div>
+                            <p class="text-center text-xs text-slate-400 mt-4 flex items-center justify-center gap-1">
+                                <span class="material-symbols-outlined text-[14px]">lock</span>
+                                Payments are processed securely via Stripe.
+                            </p>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Recent Payments (moved inline below form) -->
+                <div class="mt-8 bg-white rounded-xl border border-slate-200 shadow-sm">
+                    <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+                        <h3 class="text-slate-900 font-bold text-base">Recent Payments</h3>
+                        <span class="text-primary text-xs font-semibold">View All</span>
+                    </div>
+                    <div class="divide-y divide-slate-100">
+                        <div class="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="h-8 w-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-[18px]">check</span>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-slate-900">Invoice #INV-2022-098</p>
+                                    <p class="text-xs text-slate-500">Sep 12, 2023</p>
+                                </div>
+                            </div>
+                            <span class="text-sm font-semibold text-slate-700">$45.00</span>
+                        </div>
+                        <div class="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="h-8 w-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-[18px]">check</span>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-slate-900">Invoice #INV-2022-054</p>
+                                    <p class="text-xs text-slate-500">Aug 2, 2023</p>
+                                </div>
+                            </div>
+                            <span class="text-sm font-semibold text-slate-700">$200.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Billing Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // ── Auth ───────────────────────────────────────────────────
+            const raw = localStorage.getItem('mediora_user');
+            if (!raw) { window.location.href = '/login.html'; return; }
+            const user = JSON.parse(raw);
+
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                localStorage.removeItem('mediora_user');
+                window.location.href = '/login.html';
+            });
+
+            // ── Download Invoice → window.print() ──────────────────────
+            document.getElementById('download-invoice-btn').addEventListener('click', () => {
+                window.print();
+            });
+
+            // ── Fill Valid CC (Visa, CVC 000) ──────────────────────────
+            document.getElementById('fill-valid-cc').addEventListener('click', () => {
+                document.getElementById('cc-name').value = user.name || 'Jane Doe';
+                document.getElementById('cc-number').value = '4111 1111 1111 1111';
+                document.getElementById('cc-expiry').value = '12/26';
+                document.getElementById('cc-cvc').value = '000';
+            });
+
+            // ── Fill Declined CC (Mastercard, CVC 999) ─────────────────
+            document.getElementById('fill-declined-cc').addEventListener('click', () => {
+                document.getElementById('cc-name').value = user.name || 'Jane Doe';
+                document.getElementById('cc-number').value = '5500 0000 0000 0004';
+                document.getElementById('cc-expiry').value = '06/25';
+                document.getElementById('cc-cvc').value = '999';
+            });
+
+            // ── Process Payment ────────────────────────────────────────
+            const payBtn = document.getElementById('process-payment-btn');
+            payBtn.addEventListener('click', async () => {
+                const cvc = document.getElementById('cc-cvc').value.trim();
+
+                if (!cvc) {
+                    alert('⚠️ Please fill in all card details.');
+                    return;
+                }
+
+                payBtn.disabled = true;
+                payBtn.innerHTML = '<span class="animate-pulse">Processing…</span>';
+
+                try {
+                    const res = await fetch('/api/billing/pay', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-User-ID': user.id,
+                        },
+                        body: JSON.stringify({ invoice: 'INV-2023-001', amount: 150.00, cvc }),
+                    });
+                    const data = await res.json();
+                    console.log('[Mediora] Billing response:', data);
+
+                    // Route based on CVC
+                    if (cvc === '000') {
+                        // Valid card → success page
+                        localStorage.setItem('mediora_last_payment', JSON.stringify(data));
+                        window.location.href = '/success.html';
+                    } else if (cvc === '999') {
+                        // Declined card → failed page
+                        localStorage.setItem('mediora_last_payment', JSON.stringify(data));
+                        window.location.href = '/failed.html';
+                    } else {
+                        // Unknown CVC — use API response
+                        if (data.success) {
+                            localStorage.setItem('mediora_last_payment', JSON.stringify(data));
+                            window.location.href = '/success.html';
+                        } else {
+                            alert(`❌ Payment failed.\n\n${data.message}`);
+                        }
+                    }
+                } catch (err) {
+                    console.error('[Mediora] Billing error:', err);
+                    alert('❌ Network error — could not reach server.');
+                    payBtn.disabled = false;
+                    payBtn.innerHTML = '<span>Process Payment</span><span class="text-white/80 font-medium">($150.00)</span><span class="material-symbols-outlined text-[20px]">arrow_forward</span>';
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

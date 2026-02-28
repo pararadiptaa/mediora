@@ -1,0 +1,12 @@
+{
+    "name": "mediora-loadgen",
+    "version": "1.0.0",
+    "description": "Playwright-based load generator for Mediora healthcare app",
+    "main": "bot.js",
+    "scripts": {
+        "start": "node bot.js"
+    },
+    "dependencies": {
+        "playwright": "1.40.0"
+    }
+}

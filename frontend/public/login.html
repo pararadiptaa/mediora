@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Mediora — Sign In</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+</head>
+
+<body class="bg-background-light font-display min-h-screen flex items-center justify-center p-4 antialiased">
+    <div
+        class="w-full max-w-4xl bg-white rounded-xl shadow-xl overflow-hidden flex flex-col md:flex-row h-auto min-h-[600px]">
+        <!-- Left Section: Branding -->
+        <div class="hidden md:flex md:w-5/12 bg-primary flex-col justify-between p-10 relative overflow-hidden">
+            <div class="absolute inset-0 opacity-10"
+                style="background-image: radial-gradient(#ffffff 2px, transparent 2px); background-size: 30px 30px;">
+            </div>
+            <div class="relative z-10">
+                <div class="flex items-center gap-3 mb-8">
+                    <span class="material-symbols-outlined text-white text-4xl">local_hospital</span>
+                    <h1 class="text-white text-3xl font-black tracking-tight">Mediora</h1>
+                </div>
+                <p class="text-blue-100 text-lg leading-relaxed">
+                    Secure, convenient access to your personal health records, appointment scheduling, and communication
+                    with your care team.
+                </p>
+            </div>
+            <div class="relative z-10 mt-auto">
+                <div class="flex items-center gap-2 text-blue-100 mb-2">
+                    <span class="material-symbols-outlined text-sm">verified_user</span>
+                    <span class="text-sm font-medium">HIPAA Compliant</span>
+                </div>
+                <p class="text-blue-200 text-xs">© 2024 Mediora Healthcare</p>
+            </div>
+        </div>
+        <!-- Right Section: Login Form -->
+        <div class="w-full md:w-7/12 p-8 md:p-12 flex flex-col justify-center bg-white">
+            <!-- Mobile Logo -->
+            <div class="md:hidden flex flex-col gap-2 mb-8 text-center">
+                <div class="flex items-center justify-center gap-2 text-primary">
+                    <span class="material-symbols-outlined text-3xl">local_hospital</span>
+                    <span class="text-3xl font-black tracking-tight text-slate-900">Mediora</span>
+                </div>
+                <p class="text-slate-500">Patient Portal Login</p>
+            </div>
+            <!-- Header -->
+            <div class="mb-8 hidden md:block">
+                <h2 class="text-2xl font-bold text-slate-900 mb-2">Welcome Back</h2>
+                <p class="text-slate-500">Please sign in to your account</p>
+            </div>
+            <!-- Demo Users Section -->
+            <div class="mb-8">
+                <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-4">Demo
+                    Users (Click to sign in)</h3>
+                <div class="grid grid-cols-3 gap-3">
+                    <!-- User A — Budi -->
+                    <button id="demo-user-a"
+                        class="group flex flex-col items-center gap-2 p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-primary/30 transition-all text-center">
+                        <div
+                            class="w-14 h-14 rounded-full overflow-hidden border-2 border-slate-100 group-hover:border-primary transition-colors shadow-sm">
+                            <img alt="Portrait of User A (Budi)" class="w-full h-full object-cover"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDx_zUEu9Id_ASOChlXYxDiJJ2IdwKu9PU771geMuqsBOe7ocXbZoDOszJXk7ksReT8nmdryfbGuOy21_4T2lTi4YiRTwIBa876Jtn53B8Nl-X8MGeGH6o_nJTcTlswFYasdzHlYPOPcbksN6wHQCGZczHorhSLzSaiSWXEmZJiPFeJDFi-III6Dzy-xid5htHGn2dmmhDI2ZEletY_phSnWAR1mVRTKdvhfuYwgW_nXZv9_6YiIio8YU4I0XCruGBH0cNHlqmIfwBd" />
+                        </div>
+                        <span class="text-xs font-bold text-slate-700 group-hover:text-primary">Budi</span>
+                        <span class="text-[10px] text-slate-400 leading-tight">Clean slate</span>
+                    </button>
+                    <!-- User B — Siti -->
+                    <button id="demo-user-b"
+                        class="group flex flex-col items-center gap-2 p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-primary/30 transition-all text-center">
+                        <div
+                            class="w-14 h-14 rounded-full overflow-hidden border-2 border-slate-100 group-hover:border-primary transition-colors shadow-sm">
+                            <img alt="Portrait of User B (Siti)" class="w-full h-full object-cover"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMWgYIdDaRz8SyddYD6LZYKytk4rsJlO2Qc2vp0ezkgVI3jcwFf9KzTFhUg3_LvM1v4nn3k6alVihDNRIfwKoFq49Qsi_n8Fdmm80xg5BxxUj3Y0w2Gb1HSdOHFTpnylvuKr_ebXGz3DPcuEa_G5H3tcThkdN1Gwj_qAeIGYwqFXyeav2nCzuqLA-4g1a34xkAtUjgqhK7F81N5NfOFCo8T-jDkUmtbyoIHQ_AqdCocYd3d0TnrcUnB0e0T6P942WWWDcBwhmLUjLf" />
+                        </div>
+                        <span class="text-xs font-bold text-slate-700 group-hover:text-primary">Siti</span>
+                        <span class="text-[10px] text-slate-400 leading-tight">Has outstanding bills</span>
+                    </button>
+                    <!-- User C — John -->
+                    <button id="demo-user-c"
+                        class="group flex flex-col items-center gap-2 p-3 rounded-lg hover:bg-blue-50 border border-transparent hover:border-primary/30 transition-all text-center">
+                        <div
+                            class="w-14 h-14 rounded-full overflow-hidden border-2 border-slate-100 group-hover:border-primary transition-colors shadow-sm">
+                            <img alt="Portrait of User C (John)" class="w-full h-full object-cover"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBecDknmoX1jT3Jpgr0WB92DSFRUbAHUqzJQ4fYC_VLiF-c10N8hYCeVuw46lG9EkpvmFCe3hE6in2OLX1O-D4Pw98PXUz4qLUAebyn8uAn3aEIMu36T9VlgPjlczh8Fk5l9Qc1ptuqAyU727XBMAgs4uo5J7MGwp_O_EvN7EkfRD4Cr7qzfHQgx7fB6uIlqQIfZUaf8G2z0i7VdsT85ec2ludiAzuGvDYqJvFH_H8aMUq0grdkQ7VgCbxnC2mnUm7fv6v4Pm3P7RcD" />
+                        </div>
+                        <span class="text-xs font-bold text-slate-700 group-hover:text-primary">John</span>
+                        <span class="text-[10px] text-slate-400 leading-tight">Chaos user · slow DB</span>
+                    </button>
+                </div>
+            </div>
+            <!-- Login Form -->
+            <form id="login-form" class="flex flex-col gap-5">
+                <label class="block">
+                    <span class="text-sm font-medium text-slate-900 mb-1.5 block">Username</span>
+                    <div class="relative">
+                        <div
+                            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                            <span class="material-symbols-outlined text-[20px]">person</span>
+                        </div>
+                        <input id="login-username"
+                            class="form-input block w-full rounded-lg border-slate-200 bg-slate-50 pl-10 pr-3 py-2.5 text-slate-900 focus:border-primary focus:ring-primary sm:text-sm shadow-sm"
+                            placeholder="Enter your username" type="text" />
+                    </div>
+                </label>
+                <label class="block">
+                    <div class="flex justify-between items-center mb-1.5">
+                        <span class="text-sm font-medium text-slate-900">Password</span>
+                        <a class="text-xs text-primary hover:text-blue-600 font-medium transition-colors"
+                            href="#">Forgot password?</a>
+                    </div>
+                    <div class="relative">
+                        <div
+                            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                            <span class="material-symbols-outlined text-[20px]">lock</span>
+                        </div>
+                        <input id="login-password"
+                            class="form-input block w-full rounded-lg border-slate-200 bg-slate-50 pl-10 pr-3 py-2.5 text-slate-900 focus:border-primary focus:ring-primary sm:text-sm shadow-sm"
+                            placeholder="Enter your password" type="password" />
+                    </div>
+                </label>
+                <div class="pt-2">
+                    <button id="sign-in-btn"
+                        class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors"
+                        type="button">
+                        Sign In
+                    </button>
+                </div>
+            </form>
+            <div class="mt-8 text-center">
+                <p class="text-sm text-slate-500">
+                    Don't have an account?
+                    <a class="font-medium text-primary hover:text-blue-600" href="#">Register as new patient</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const DEMO_USERS = {
+                a: { id: 'budi', name: 'Budi' },
+                b: { id: 'siti', name: 'Siti' },
+                c: { id: 'john', name: 'John' },
+            };
+
+            function loginAs(user) {
+                localStorage.setItem('mediora_user', JSON.stringify(user));
+                window.location.href = '/dashboard.html';
+            }
+
+            // Demo user buttons
+            document.getElementById('demo-user-a').addEventListener('click', () => loginAs(DEMO_USERS.a));
+            document.getElementById('demo-user-b').addEventListener('click', () => loginAs(DEMO_USERS.b));
+            document.getElementById('demo-user-c').addEventListener('click', () => loginAs(DEMO_USERS.c));
+
+            // Sign In button — treat any manual entry as "budi" for demo purposes
+            document.getElementById('sign-in-btn').addEventListener('click', () => {
+                const username = document.getElementById('login-username').value.trim().toLowerCase();
+                // Map known names, fallback to generic
+                const known = Object.values(DEMO_USERS).find(u => u.id === username || u.name.toLowerCase() === username);
+                loginAs(known || { id: username || 'guest', name: username || 'Guest' });
+            });
+
+            // If already logged in, skip to dashboard
+            if (localStorage.getItem('mediora_user')) {
+                window.location.href = '/dashboard.html';
+            }
+        });
+    </script>
+</body>
+
+</html>

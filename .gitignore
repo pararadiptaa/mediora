@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+.npm/
+.venv/
+env/
+venv/
+ENV/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Testing and Reports
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# User Documents (Walkthroughs and system generated files)
+walkthrough*.md*
+.system_generated/
+.gemini/
+brain/
+tmp/
