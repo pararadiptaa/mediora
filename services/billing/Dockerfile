@@ -5,13 +5,15 @@ WORKDIR /app
 
 # Cache dependencies
 COPY go.mod ./
-# Add go.sum later when downloaded, if running `go mod download`
-# RUN go mod download
 
 COPY . .
 
+# Download dependencies and generate go.sum
+RUN go mod tidy
+
 # Build the binary
 RUN CGO_ENABLED=0 GOOS=linux go build -o billing-api main.go
+
 
 # Stage 2: Minimal runtime image
 FROM alpine:latest
