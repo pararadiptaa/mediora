@@ -1,5 +1,5 @@
 const express = require("express");
-const http = require("http");
+const axios = require("axios");
 const { Pool } = require("pg");
 
 // ── Config from environment ──────────────────────────────────────────
@@ -71,36 +71,33 @@ function cpuSpikeBurn() {
 }
 
 /**
- * Call the Billing API using the Node.js standard library.
+ * Call the Billing API using axios to ensure APM headers propagate.
  */
-function callBillingApi(userId) {
-  return new Promise((resolve, reject) => {
-    const url = `${BILLING_API_URL}/api/billing/pay`;
-    const req = http.request(
+async function callBillingApi(req, userId) {
+  const url = `${BILLING_API_URL}/api/billing/pay`;
+
+  // Explicit Context Propagation for APM (Dynatrace, OpenTelemetry, etc.)
+  const headers = {
+    "Content-Type": "application/json",
+    "X-User-ID": userId || "unknown",
+  };
+
+  // Propagate trace IDs and Dynatrace specific headers if they exist
+  if (req.headers["traceparent"]) headers["traceparent"] = req.headers["traceparent"];
+  if (req.headers["tracestate"]) headers["tracestate"] = req.headers["tracestate"];
+  if (req.headers["x-dynatrace"]) headers["x-dynatrace"] = req.headers["x-dynatrace"];
+
+  try {
+    const res = await axios.post(
       url,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-User-ID": userId || "unknown",
-        },
-      },
-      (res) => {
-        let body = "";
-        res.on("data", (chunk) => (body += chunk));
-        res.on("end", () => {
-          try {
-            resolve({ status: res.statusCode, body: JSON.parse(body) });
-          } catch {
-            resolve({ status: res.statusCode, body });
-          }
-        });
-      }
+      { invoice: "INV-2023-001", amount: 150.0 },
+      { headers, validateStatus: () => true } // Resolve on any HTTP status
     );
-    req.on("error", (err) => reject(err));
-    req.write(JSON.stringify({ invoice: "INV-2023-001", amount: 150.0 }));
-    req.end();
-  });
+    return { status: res.status, body: res.data };
+  } catch (err) {
+    // Network errors or axios setup errors
+    return { status: 500, body: err.message };
+  }
 }
 
 // ── Express app ──────────────────────────────────────────────────────
@@ -167,7 +164,7 @@ app.post("/api/appointments/book", async (req, res) => {
 
     // ── Call Billing API ─────────────────────────────────────────
     log("info", "Calling Billing API to process payment…");
-    const billing = await callBillingApi(userId);
+    const billing = await callBillingApi(req, userId);
 
     if (billing.status !== 200) {
       log("error", "Billing API returned an error", { billingResponse: billing });
