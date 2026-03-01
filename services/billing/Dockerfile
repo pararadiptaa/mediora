@@ -1,5 +1,5 @@
 # Stage 1: Build the Go binary
-FROM golang:1.21-alpine AS builder
+FROM golang:1.21-bookworm AS builder
 
 WORKDIR /app
 
@@ -11,12 +11,13 @@ COPY . .
 # Download dependencies and generate go.sum
 RUN go mod tidy
 
-# Build the binary
-RUN CGO_ENABLED=0 GOOS=linux go build -o billing-api main.go
+# Build the binary with CGO and explicit debug symbols
+ENV CGO_ENABLED=1
+RUN GOOS=linux go build -o billing-api main.go
 
 
-# Stage 2: Minimal runtime image
-FROM alpine:latest
+# Stage 2: Minimal runtime image compatible with OneAgent
+FROM debian:bookworm-slim
 
 WORKDIR /root/
 

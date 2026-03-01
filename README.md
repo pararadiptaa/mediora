@@ -46,7 +46,7 @@ graph TD
 |---------|------------|------|
 | **frontend** | Nginx + HTML/JS/Tailwind | Serves the static patient portal and reverse-proxies API requests. |
 | **appointment-api** | Node.js / Express | Handles booking logic, interfaces with PostgreSQL, and forwards payments. |
-| **billing-api** | Go / Gin | Processes mock payments with configurable failure rates. Highly optimized compiled binary designed to reliably propagate Dynatrace APM contexts natively. |
+| **billing-api** | Go / Gin | Processes mock payments with configurable failure rates. Highly optimized compiled binary relying purely on **Native Dynatrace OneAgent Monitoring** to unlock deeper backend insights like Goroutine analysis and CPU profiling. |
 | **postgres** | PostgreSQL 15 | Persistent storage layer for appointment records. |
 | **loadgen** | Playwright (Chromium) | Headless bot that drives continuous, realistic user traffic. |
 
@@ -145,7 +145,7 @@ mediora/
 │   │   └── server.js           # Handles bookings & PostgreSQL connections
 │   ├── billing/                # Go + Gin + Chaos
 │   │   ├── Dockerfile
-│   │   ├── go.mod
+│   │   ├── go.mod              # Go module definition
 │   │   └── main.go             # Processes payments, simulates HTTP 500s
 │   └── db/
 │       └── init.sql            # PostgreSQL schema and seed data

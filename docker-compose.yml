@@ -64,7 +64,7 @@ services:
         condition: service_started
     restart: unless-stopped
 
-  # ── Billing API (Python / Flask) ────────────────────────────────────
+  # ── Billing API (Golang / Gin) ──────────────────────────────────────
   billing-api:
     build:
       context: ./services/billing
@@ -73,10 +73,9 @@ services:
     environment:
       PORT: "3002"
       SERVICE_NAME: "billing-api"
-      DELAY_MIN: "100"
-      DELAY_MAX: "500"
-      FAILURE_RATE: "0.3"
-      DT_TAGS: "project:mediora,language:golang"
+      # ── APM Tracing (W3C Config) ──
+      DT_PROPAGATION_HEADERS: "w3c,tracecontext"
+      DT_TAGS: "project:mediora,language:golang,mode:native"
       # ── Chaos Engineering ──
       MEDIORA_PROBLEMS: "Billing500"
       CHAOS_DELAY_SECONDS: "120"

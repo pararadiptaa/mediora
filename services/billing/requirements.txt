@@ -1,4 +1,0 @@
-flask>=3.0,<4.0
-gunicorn
-opentelemetry-distro
-opentelemetry-instrumentation-flask
