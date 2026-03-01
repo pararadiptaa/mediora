@@ -25,7 +25,7 @@ graph TD
     Nginx["🛡️ Nginx Proxy<br/>(:8080)"]:::proxy
     
     ApptAPI["🏥 Appointment API<br/>(Node.js :3001)"]:::service
-    BillingAPI["💳 Billing API<br/>(Python :3002)"]:::service
+    BillingAPI["💳 Billing API<br/>(Go :3002)"]:::service
     
     Postgres[("🐘 PostgreSQL<br/>(Port 5432)")]:::db
 
@@ -46,7 +46,7 @@ graph TD
 |---------|------------|------|
 | **frontend** | Nginx + HTML/JS/Tailwind | Serves the static patient portal and reverse-proxies API requests. |
 | **appointment-api** | Node.js / Express | Handles booking logic, interfaces with PostgreSQL, and forwards payments. |
-| **billing-api** | Python / Flask | Processes mock payments with configurable failure rates. Instrumented via `autodynatrace` to ensure unbroken distributed traces from Node.js. |
+| **billing-api** | Go / Gin | Processes mock payments with configurable failure rates. Highly optimized compiled binary designed to reliably propagate Dynatrace APM contexts natively. |
 | **postgres** | PostgreSQL 15 | Persistent storage layer for appointment records. |
 | **loadgen** | Playwright (Chromium) | Headless bot that drives continuous, realistic user traffic. |
 
@@ -143,10 +143,10 @@ mediora/
 │   │   ├── Dockerfile
 │   │   ├── package.json
 │   │   └── server.js           # Handles bookings & PostgreSQL connections
-│   ├── billing/                # Python + Flask + Chaos
+│   ├── billing/                # Go + Gin + Chaos
 │   │   ├── Dockerfile
-│   │   ├── requirements.txt
-│   │   └── app.py              # Processes payments, simulates HTTP 500s
+│   │   ├── go.mod
+│   │   └── main.go             # Processes payments, simulates HTTP 500s
 │   └── db/
 │       └── init.sql            # PostgreSQL schema and seed data
 └── loadgen/

@@ -78,15 +78,7 @@ services:
       DELAY_MIN: "100"
       DELAY_MAX: "500"
       FAILURE_RATE: "0.3"
-      OTEL_SERVICE_NAME: "billing-api"
-      OTEL_TRACES_EXPORTER: "none"
-      OTEL_PYTHON_FLASK_EXCLUDED_URLS: "health"
-      # ── APM Tracing (W3C Config) ──
-      DT_PROPAGATION_HEADERS: "w3c,tracecontext"
-      OTEL_PROPAGATORS: "tracecontext,baggage"
-      OTEL_PYTHON_ID_GENERATOR: "xray"
-      DT_TAGS: "project:mediora,service:billing"
-      DT_CUSTOM_PROP: "app_stage:demo"
+      DT_TAGS: "project:mediora,language:golang"
       # ── Chaos Engineering ──
       MEDIORA_PROBLEMS: "Billing500"
       CHAOS_DELAY_SECONDS: "120"

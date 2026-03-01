@@ -1,12 +1,25 @@
-FROM python:3.12-slim
+# Stage 1: Build the Go binary
+FROM golang:1.21-alpine AS builder
 
 WORKDIR /app
 
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+# Cache dependencies
+COPY go.mod ./
+# Add go.sum later when downloaded, if running `go mod download`
+# RUN go mod download
 
-COPY app.py ./
+COPY . .
 
-EXPOSE ${PORT:-3002}
+# Build the binary
+RUN CGO_ENABLED=0 GOOS=linux go build -o billing-api main.go
 
-CMD ["opentelemetry-instrument", "gunicorn", "--preload", "--bind", "0.0.0.0:3002", "--workers", "2", "app:app"]
+# Stage 2: Minimal runtime image
+FROM alpine:latest
+
+WORKDIR /root/
+
+COPY --from=builder /app/billing-api .
+
+EXPOSE 3002
+
+CMD ["./billing-api"]
