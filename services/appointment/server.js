@@ -83,7 +83,11 @@ async function callBillingApi(req, userId) {
   };
 
   // Propagate trace IDs and Dynatrace specific headers if they exist
-  if (req.headers["traceparent"]) headers["traceparent"] = req.headers["traceparent"];
+  const traceparent = req.headers["traceparent"];
+  if (traceparent) {
+    headers["traceparent"] = traceparent.toLowerCase();
+    log("info", "Forwarding traceparent:", { traceparent });
+  }
   if (req.headers["tracestate"]) headers["tracestate"] = req.headers["tracestate"];
   if (req.headers["x-dynatrace"]) headers["x-dynatrace"] = req.headers["x-dynatrace"];
 

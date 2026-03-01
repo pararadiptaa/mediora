@@ -51,6 +51,9 @@ services:
       DB_USER: "mediora"
       DB_PASSWORD: "mediora_pass"
       DB_NAME: "mediora_db"
+      # ── APM Tracing (W3C Config) ──
+      DT_PROPAGATION_HEADERS: "w3c,tracecontext"
+      OTEL_PROPAGATORS: "tracecontext,baggage"
       # ── Chaos Engineering ──
       MEDIORA_PROBLEMS: "SlowDatabaseQuery,CpuSpike"
       CHAOS_DELAY_SECONDS: "120"
@@ -78,6 +81,10 @@ services:
       OTEL_SERVICE_NAME: "billing-api"
       OTEL_TRACES_EXPORTER: "none"
       OTEL_PYTHON_FLASK_EXCLUDED_URLS: "health"
+      # ── APM Tracing (W3C Config) ──
+      DT_PROPAGATION_HEADERS: "w3c,tracecontext"
+      OTEL_PROPAGATORS: "tracecontext,baggage"
+      OTEL_PYTHON_ID_GENERATOR: "xray"
       DT_TAGS: "project:mediora,service:billing"
       DT_CUSTOM_PROP: "app_stage:demo"
       # ── Chaos Engineering ──
