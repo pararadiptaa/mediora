@@ -9,4 +9,4 @@ COPY app.py ./
 
 EXPOSE ${PORT:-3002}
 
-CMD ["gunicorn", "--preload", "--bind", "0.0.0.0:3002", "--workers", "2", "app:app"]
+CMD ["opentelemetry-instrument", "gunicorn", "--preload", "--bind", "0.0.0.0:3002", "--workers", "2", "app:app"]
