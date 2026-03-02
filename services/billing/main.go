@@ -265,7 +265,7 @@ func main() {
 			})
 			c.JSON(http.StatusBadRequest, gin.H{
 				"success": false,
-				"message": "Invalid request body - appointment_id is required",
+				"message": "Invalid request body",
 			})
 			return
 		}
@@ -289,41 +289,49 @@ func main() {
 		})
 
 		// ── DB SELECT: Verify appointment exists ──────────────────
-		var appointmentStatus string
-		err := db.QueryRow(
-			"SELECT status FROM appointments WHERE id = $1",
-			appointmentID,
-		).Scan(&appointmentStatus)
+		// Skip when appointment_id is 0 (direct billing.html payment,
+		// not associated with a specific booking).
+		if appointmentID > 0 {
+			var appointmentStatus string
+			err := db.QueryRow(
+				"SELECT status FROM appointments WHERE id = $1",
+				appointmentID,
+			).Scan(&appointmentStatus)
 
-		if err != nil {
-			if err == sql.ErrNoRows {
-				logMessage("error", "Appointment not found in database", map[string]interface{}{
+			if err != nil {
+				if err == sql.ErrNoRows {
+					logMessage("error", "Appointment not found in database", map[string]interface{}{
+						"appointmentID": appointmentID,
+						"userId":        userId,
+					})
+					c.JSON(http.StatusNotFound, gin.H{
+						"success": false,
+						"service": serviceName,
+						"message": "Appointment not found",
+					})
+					return
+				}
+				logMessage("error", "Database query failed", map[string]interface{}{
 					"appointmentID": appointmentID,
-					"userId":        userId,
+					"error":         err.Error(),
 				})
-				c.JSON(http.StatusNotFound, gin.H{
+				c.JSON(http.StatusInternalServerError, gin.H{
 					"success": false,
 					"service": serviceName,
-					"message": "Appointment not found",
+					"message": "Database error",
 				})
 				return
 			}
-			logMessage("error", "Database query failed", map[string]interface{}{
-				"appointmentID": appointmentID,
-				"error":         err.Error(),
-			})
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"success": false,
-				"service": serviceName,
-				"message": "Database error",
-			})
-			return
-		}
 
-		logMessage("info", "Appointment verified in database", map[string]interface{}{
-			"appointmentID":     appointmentID,
-			"appointmentStatus": appointmentStatus,
-		})
+			logMessage("info", "Appointment verified in database", map[string]interface{}{
+				"appointmentID":     appointmentID,
+				"appointmentStatus": appointmentStatus,
+			})
+		} else {
+			logMessage("info", "Standalone payment (no appointment_id) — skipping appointment verification", map[string]interface{}{
+				"userId": userId,
+			})
+		}
 
 		// ── Call Validation API ──────────────────────────────────
 		isValid, err := callValidationAPI(cardNumber, traceparent, tracestate)
@@ -363,31 +371,45 @@ func main() {
 		}
 
 		// ── DB UPDATE: Mark appointment as paid ──────────────────
-		_, err = db.Exec(
-			"UPDATE appointments SET status = 'paid' WHERE id = $1",
-			appointmentID,
-		)
+		// Only when called from the booking flow (appointment_id > 0).
+		if appointmentID > 0 {
+			_, err = db.Exec(
+				"UPDATE appointments SET status = 'paid' WHERE id = $1",
+				appointmentID,
+			)
 
-		if err != nil {
-			logMessage("error", "Failed to update appointment status", map[string]interface{}{
-				"appointmentID": appointmentID,
-				"error":         err.Error(),
-			})
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"success": false,
-				"service": serviceName,
-				"message": "Payment processed but failed to update appointment status",
-			})
-			return
+			if err != nil {
+				logMessage("error", "Failed to update appointment status", map[string]interface{}{
+					"appointmentID": appointmentID,
+					"error":         err.Error(),
+				})
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"success": false,
+					"service": serviceName,
+					"message": "Payment processed but failed to update appointment status",
+				})
+				return
+			}
 		}
 
 		// ── DB INSERT: Record billing transaction ─────────────────
 		// Non-fatal: payment and appointment update already succeeded.
-		_, txErr := db.Exec(
-			`INSERT INTO billing_transactions (appointment_id, user_id, invoice, amount, status)
-			 VALUES ($1, $2, $3, $4, 'paid')`,
-			appointmentID, userId, req.Invoice, req.Amount,
-		)
+		// For standalone payments (appointment_id = 0) we still record the
+		// transaction but with a NULL appointment_id.
+		var txErr error
+		if appointmentID > 0 {
+			_, txErr = db.Exec(
+				`INSERT INTO billing_transactions (appointment_id, user_id, invoice, amount, status)
+				 VALUES ($1, $2, $3, $4, 'paid')`,
+				appointmentID, userId, req.Invoice, req.Amount,
+			)
+		} else {
+			_, txErr = db.Exec(
+				`INSERT INTO billing_transactions (user_id, invoice, amount, status)
+				 VALUES ($1, $2, $3, 'paid')`,
+				userId, req.Invoice, req.Amount,
+			)
+		}
 		if txErr != nil {
 			logMessage("warn", "Failed to record billing transaction (non-fatal)", map[string]interface{}{
 				"appointmentID": appointmentID,

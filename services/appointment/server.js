@@ -188,11 +188,6 @@ app.post("/api/appointments/book", async (req, res) => {
       log("warn", "CHAOS SlowDatabaseQuery — executing pg_sleep(3)", { userId });
       await pool.query("SELECT pg_sleep(3)");
       log("warn", "CHAOS SlowDatabaseQuery — completed", { userId });
-    } else if (userId.toLowerCase() === "john") {
-      // Legacy per-user slow query (kept for backward compat)
-      log("warn", "User C detected — executing intentional slow query (pg_sleep 3s)", { userId });
-      await pool.query("SELECT pg_sleep(3)");
-      log("warn", "Slow query completed", { userId });
     }
 
     // ── Upsert user — ensures new/custom users don't cause FK violation ─

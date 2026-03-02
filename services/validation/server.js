@@ -108,6 +108,26 @@ app.post("/api/validate-card", async (req, res) => {
     // Mask the card number (show last 4 digits)
     const maskedCard = `****${cardNumber.slice(-4)}`;
 
+    // Known declined card — Mastercard test number used by billing.html
+    // "Fill Declined CC" button.
+    const DECLINED_CARDS = new Set(["5500000000000004"]);
+    const normalised = cardNumber.replace(/\s/g, "");
+
+    if (DECLINED_CARDS.has(normalised)) {
+      log("warn", "Card declined", {
+        transactionId,
+        maskedCard,
+        traceparent: traceContext.traceparent,
+      });
+      return res.status(402).json({
+        valid: false,
+        cardNumber: maskedCard,
+        transactionId,
+        reason: "Card declined",
+        timestamp: new Date().toISOString(),
+      });
+    }
+
     log("info", "Card validated successfully", {
       transactionId,
       maskedCard,

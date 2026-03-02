@@ -328,13 +328,15 @@
                 payBtn.innerHTML = '<span class="animate-pulse">Processing…</span>';
 
                 try {
+                    const rawCardNumber = document.getElementById('cc-number').value.replace(/\s/g, '');
                     const res = await fetch('/api/billing/pay', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-User-ID': user.id,
+                            'X-Card-Number': rawCardNumber || '4111111111111111',
                         },
-                        body: JSON.stringify({ invoice: 'INV-2023-001', amount: 150.00, cvc }),
+                        body: JSON.stringify({ invoice: 'INV-2023-001', amount: 150.00 }),
                     });
                     const data = await res.json();
                     console.log('[Mediora] Billing response:', data);

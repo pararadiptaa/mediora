@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS medical_records (
 -- ────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS billing_transactions (
     id             SERIAL PRIMARY KEY,
-    appointment_id INT            NOT NULL,
+    appointment_id INT,                    -- NULL for standalone billing.html payments
     user_id        VARCHAR(50)    NOT NULL,
     invoice        VARCHAR(100),
     amount         NUMERIC(10, 2) NOT NULL,
