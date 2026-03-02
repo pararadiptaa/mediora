@@ -33,24 +33,24 @@ graph TD
     Postgres[("🐘 PostgreSQL<br/>(Port 5432)")]:::db
 
     %% Connections - Clients to Proxy
-    Loadgen -->|Browser Sessions<br/>(2 VPM)| Nginx
-    ApiLoadgen -->|Direct API Calls<br/>(60+ RPM)| Nginx
+    Loadgen -->|Browser Sessions 2 VPM| Nginx
+    ApiLoadgen -->|Direct API Calls 60+ RPM| Nginx
     Browser -->|HTTP Requests| Nginx
-    
+
     %% Connections - Proxy to Services
     Nginx -->|/api/appointments/*| ApptAPI
     Nginx -->|/api/billing/*| BillingAPI
     Nginx -->|/api/validate*| ValidationAPI
     Nginx -->|/api/records*| RecordsAPI
-    
+
     %% Service-to-Service Connections
-    ApptAPI -->|POST /pay<br/>+ W3C Headers| BillingAPI
-    BillingAPI -->|POST /validate-card<br/>+ W3C Headers| ValidationAPI
-    
+    ApptAPI -->|POST /pay + W3C Headers| BillingAPI
+    BillingAPI -->|POST /validate-card + W3C Headers| ValidationAPI
+
     %% Database Connections
-    ApptAPI -->|UPSERT users<br/>INSERT/SELECT appointments| Postgres
-    BillingAPI -->|SELECT/UPDATE appointments<br/>INSERT billing_transactions| Postgres
-    RecordsAPI -->|SELECT<br/>medical_records| Postgres
+    ApptAPI -->|UPSERT users / INSERT SELECT appointments| Postgres
+    BillingAPI -->|SELECT UPDATE appointments / INSERT billing_transactions| Postgres
+    RecordsAPI -->|SELECT medical_records| Postgres
 ```
 
 ### Component Breakdown
