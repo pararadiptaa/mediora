@@ -1,5 +1,6 @@
 -- Mediora — init.sql
 -- Automatically run by PostgreSQL on first container start.
+-- DB is intentionally ephemeral (no pgdata volume) so this always runs fresh.
 
 -- ────────────────────────────────────────────────────────────────
 -- Users Table
@@ -11,10 +12,11 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- ────────────────────────────────────────────────────────────────
 -- Doctors Table
+-- UNIQUE on name so ON CONFLICT DO NOTHING works correctly.
 -- ────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS doctors (
     id          SERIAL PRIMARY KEY,
-    name        VARCHAR(100) NOT NULL,
+    name        VARCHAR(100) NOT NULL UNIQUE,
     specialty   VARCHAR(100) NOT NULL
 );
 
@@ -26,9 +28,9 @@ CREATE TABLE IF NOT EXISTS appointments (
     user_id          VARCHAR(50)  NOT NULL,
     doctor_id        INT          NOT NULL,
     appointment_date TIMESTAMP    NOT NULL DEFAULT NOW() + INTERVAL '1 day',
-    status           VARCHAR(50)  NOT NULL DEFAULT 'scheduled',
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE CASCADE
+    status           VARCHAR(50)  NOT NULL DEFAULT 'pending',
+    FOREIGN KEY (user_id)   REFERENCES users(user_id)   ON DELETE CASCADE,
+    FOREIGN KEY (doctor_id) REFERENCES doctors(id)       ON DELETE CASCADE
 );
 
 -- ────────────────────────────────────────────────────────────────
@@ -48,31 +50,57 @@ CREATE TABLE IF NOT EXISTS medical_records (
 );
 
 -- ────────────────────────────────────────────────────────────────
+-- Billing Transactions Table
+-- Inserted by billing-api after every successful payment.
+-- ────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS billing_transactions (
+    id             SERIAL PRIMARY KEY,
+    appointment_id INT            NOT NULL,
+    user_id        VARCHAR(50)    NOT NULL,
+    invoice        VARCHAR(100),
+    amount         NUMERIC(10, 2) NOT NULL,
+    status         VARCHAR(50)    NOT NULL DEFAULT 'paid',
+    created_at     TIMESTAMP      NOT NULL DEFAULT NOW(),
+    FOREIGN KEY (appointment_id) REFERENCES appointments(id)  ON DELETE CASCADE,
+    FOREIGN KEY (user_id)        REFERENCES users(user_id)    ON DELETE CASCADE
+);
+
+-- ────────────────────────────────────────────────────────────────
 -- Seed Data: Users
+-- Includes all three demo personas used by login.html and bot.js.
 -- ────────────────────────────────────────────────────────────────
 INSERT INTO users (user_id, name) VALUES
+    ('budi', 'Budi Santoso'),
     ('siti', 'Siti Aminah'),
-    ('budi', 'Budi Santoso')
+    ('john', 'John Doe')
 ON CONFLICT (user_id) DO NOTHING;
 
 -- ────────────────────────────────────────────────────────────────
 -- Seed Data: Doctors
+-- Names MUST match the values in appointment-api DOCTOR_NAME_MAP.
 -- ────────────────────────────────────────────────────────────────
 INSERT INTO doctors (name, specialty) VALUES
-    ('Dr. Siska', 'Dentistry'),
-    ('Dr. Tirta', 'Cardiology'),
-    ('Dr. Chaos', 'Neurology')
-ON CONFLICT DO NOTHING;
+    ('Dr. Siska',         'Dentistry'),
+    ('Dr. Tirta',         'Cardiology'),
+    ('Dr. Chaos',         'Neurology'),
+    ('Dr. Sarah Smith',   'Cardiology'),
+    ('Dr. Lim',           'Dentistry'),
+    ('Dr. Michael Jones', 'General Practice'),
+    ('Dr. Emily Williams','General Practice'),
+    ('Dr. Patel',         'Dermatology'),
+    ('Dr. Wong',          'Neurology')
+ON CONFLICT (name) DO NOTHING;
 
 -- ────────────────────────────────────────────────────────────────
--- Seed Data: Medical Records
+-- Seed Data: Medical Records (for Siti — has existing records)
 -- ────────────────────────────────────────────────────────────────
--- Seeds for Siti
 INSERT INTO medical_records (user_id, record_date, record_type, icon, doctor_name, facility, status, description) VALUES
-    ('siti', '2024-02-28 10:00:00', 'Blood Test (CBC)', 'bloodtype', 'Dr. Sarah Jenkins', 'Mediora Main Lab', 'completed', 'Complete blood count showing normal levels'),
-    ('siti', '2024-02-15 14:30:00', 'Chest X-Ray', 'radiology', 'Dr. Tirta', 'Radiology Dept, 2F', 'completed', 'Chest imaging - no abnormalities detected');
+    ('siti', '2024-02-28 10:00:00', 'Blood Test (CBC)',        'bloodtype',  'Dr. Sarah Jenkins', 'Mediora Main Lab',         'completed', 'Complete blood count showing normal levels'),
+    ('siti', '2024-02-15 14:30:00', 'Chest X-Ray',             'radiology',  'Dr. Tirta',          'Radiology Dept, 2F',        'completed', 'Chest imaging — no abnormalities detected');
 
--- Seeds for Budi
+-- ────────────────────────────────────────────────────────────────
+-- Seed Data: Medical Records (for Budi — clean slate with 1 past record)
+-- ────────────────────────────────────────────────────────────────
 INSERT INTO medical_records (user_id, record_date, record_type, icon, doctor_name, facility, status, description) VALUES
-    ('budi', '2024-01-30 09:15:00', 'Dental Cleaning', 'dentistry', 'Dr. Siska', 'Dental Wing, Room 105', 'completed', 'Regular dental cleaning and examination'),
-    ('budi', '2024-01-10 11:00:00', 'Cardiology Consultation', 'ecg_heart', 'Dr. Tirta', 'Room 304, Main Building', 'completed', 'Routine heart health check - all clear');
+    ('budi', '2024-01-30 09:15:00', 'Dental Cleaning',         'dentistry',  'Dr. Siska',          'Dental Wing, Room 105',    'completed', 'Regular dental cleaning and examination'),
+    ('budi', '2024-01-10 11:00:00', 'Cardiology Consultation', 'ecg_heart',  'Dr. Tirta',          'Room 304, Main Building',  'completed', 'Routine heart health check — all clear');

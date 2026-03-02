@@ -10,6 +10,23 @@ const DELAY_MAX = parseInt(process.env.DELAY_MAX, 10) || 500;
 const BILLING_API_URL =
   process.env.BILLING_API_URL || "http://billing-api:3002";
 
+// ── Doctor slug-to-name map ──────────────────────────────────────────
+// booking.html sends option values (e.g. 'dr-tirta'); the DB stores full
+// names (e.g. 'Dr. Tirta'). This map translates between the two so DB
+// lookups succeed even when the frontend and DB naming don't match.
+const DOCTOR_NAME_MAP = {
+  "dr-tirta":    "Dr. Tirta",
+  "dr-siska":    "Dr. Siska",
+  "dr-sisca":    "Dr. Siska",   // loadgen / booking.html alternative spelling
+  "dr-chaos":    "Dr. Chaos",
+  "dr-smith":    "Dr. Sarah Smith",
+  "dr-lim":      "Dr. Lim",
+  "dr-jones":    "Dr. Michael Jones",
+  "dr-williams": "Dr. Emily Williams",
+  "dr-patel":    "Dr. Patel",
+  "dr-wong":     "Dr. Wong",
+};
+
 // ── Chaos Engineering config ─────────────────────────────────────────
 const MEDIORA_PROBLEMS = (process.env.MEDIORA_PROBLEMS || "")
   .split(",")
@@ -178,13 +195,28 @@ app.post("/api/appointments/book", async (req, res) => {
       log("warn", "Slow query completed", { userId });
     }
 
+    // ── Upsert user — ensures new/custom users don't cause FK violation ─
+    await pool.query(
+      `INSERT INTO users (user_id, name) VALUES ($1, $2)
+       ON CONFLICT (user_id) DO NOTHING`,
+      [userId, userName]
+    );
+    log("info", "User upserted", { userId });
+
     // ── Resolve doctor_id from doctors table ─────────────────────
-    const doctorName = req.body?.doctor || "Dr. Tirta";
+    // Translate the frontend option value (e.g. 'dr-tirta') to the
+    // actual DB name (e.g. 'Dr. Tirta') via the slug map.
+    const rawDoctor = req.body?.doctor || "Dr. Tirta";
+    const doctorName = DOCTOR_NAME_MAP[rawDoctor.toLowerCase()] || rawDoctor;
     const doctorLookup = await pool.query(
       "SELECT id, name, specialty FROM doctors WHERE name = $1 LIMIT 1",
       [doctorName]
     );
-    const doctorRow = doctorLookup.rows[0] || { id: 1, name: doctorName, specialty: "General" };
+    // If still no match, fall back to the first doctor in the DB (safe default)
+    const doctorRow = doctorLookup.rows[0] || (
+      await pool.query("SELECT id, name, specialty FROM doctors ORDER BY id LIMIT 1")
+    ).rows[0] || { id: 1, name: doctorName, specialty: "General" };
+    log("info", "Doctor resolved", { rawDoctor, doctorName, doctorId: doctorRow.id });
 
     // ── Insert appointment into PostgreSQL ───────────────────────
     const insertResult = await pool.query(

@@ -381,6 +381,26 @@ func main() {
 			return
 		}
 
+		// ── DB INSERT: Record billing transaction ─────────────────
+		// Non-fatal: payment and appointment update already succeeded.
+		_, txErr := db.Exec(
+			`INSERT INTO billing_transactions (appointment_id, user_id, invoice, amount, status)
+			 VALUES ($1, $2, $3, $4, 'paid')`,
+			appointmentID, userId, req.Invoice, req.Amount,
+		)
+		if txErr != nil {
+			logMessage("warn", "Failed to record billing transaction (non-fatal)", map[string]interface{}{
+				"appointmentID": appointmentID,
+				"error":         txErr.Error(),
+			})
+		} else {
+			logMessage("info", "Billing transaction recorded", map[string]interface{}{
+				"appointmentID": appointmentID,
+				"invoice":       req.Invoice,
+				"amount":        req.Amount,
+			})
+		}
+
 		logMessage("info", "Payment processed successfully and appointment updated", map[string]interface{}{
 			"appointmentID": appointmentID,
 			"userId":        userId,

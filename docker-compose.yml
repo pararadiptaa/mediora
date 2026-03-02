@@ -8,8 +8,9 @@ services:
       POSTGRES_PASSWORD: mediora_pass
       POSTGRES_DB: mediora_db
     volumes:
-      - pgdata:/var/lib/postgresql/data
       - ./services/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      # No named pgdata volume — ephemeral storage guarantees init.sql
+      # always runs fresh on every 'docker compose up', keeping schema in sync.
     expose:
       - "5432"
     healthcheck:
@@ -153,5 +154,3 @@ services:
       - records-api
     restart: unless-stopped
 
-volumes:
-  pgdata:
