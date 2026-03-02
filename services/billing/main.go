@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"math/rand"
 	"net/http"
 	"os"
@@ -19,6 +21,7 @@ var (
 	medioraProblems   = parseProblems(getEnv("MEDIORA_PROBLEMS", ""))
 	chaosDelaySeconds = getEnvAsInt("CHAOS_DELAY_SECONDS", 0)
 	startupTime       = time.Now()
+	validationAPIURL  = getEnv("VALIDATION_API_URL", "http://validation-api:3003")
 )
 
 // Helper to get string env var
@@ -109,6 +112,63 @@ func logMessage(level, message string, extra map[string]interface{}) {
 	fmt.Println(string(logJSON))
 }
 
+// callValidationAPI makes a synchronous HTTP call to the validation service
+// and forwards the W3C trace context headers
+func callValidationAPI(cardNumber, traceparent, tracestate string) (bool, error) {
+	url := fmt.Sprintf("%s/api/validate-card", validationAPIURL)
+	
+	payload := map[string]string{
+		"cardNumber": cardNumber,
+	}
+	payloadBytes, _ := json.Marshal(payload)
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payloadBytes))
+	if err != nil {
+		logMessage("error", "Failed to create validation request", map[string]interface{}{"error": err.Error()})
+		return false, err
+	}
+
+	// Set Content-Type
+	req.Header.Set("Content-Type", "application/json")
+
+	// Forward W3C Trace Context headers
+	if traceparent != "" {
+		req.Header.Set("traceparent", traceparent)
+		logMessage("info", "Forwarding traceparent to validation-api", map[string]interface{}{"traceparent": traceparent})
+	}
+	if tracestate != "" {
+		req.Header.Set("tracestate", tracestate)
+		logMessage("info", "Forwarding tracestate to validation-api", map[string]interface{}{"tracestate": tracestate})
+	}
+
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		logMessage("error", "Validation API call failed", map[string]interface{}{"error": err.Error(), "url": url})
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	// Parse response
+	body, _ := io.ReadAll(resp.Body)
+	var result map[string]interface{}
+	json.Unmarshal(body, &result)
+
+	if resp.StatusCode == http.StatusOK {
+		isValid, ok := result["valid"].(bool)
+		if ok && isValid {
+			logMessage("info", "Card validated by validation-api", map[string]interface{}{"statusCode": resp.StatusCode})
+			return true, nil
+		}
+	}
+
+	logMessage("warn", "Card validation failed", map[string]interface{}{"statusCode": resp.StatusCode})
+	return false, fmt.Errorf("validation service returned status %d", resp.StatusCode)
+}
+
 func main() {
 	// Initialize Gin
 	gin.SetMode(gin.ReleaseMode)
@@ -129,6 +189,37 @@ func main() {
 		userId := c.GetHeader("X-User-ID")
 		if userId == "" {
 			userId = "unknown"
+		}
+
+		// Extract card number from request (optional for testing)
+		cardNumber := c.GetHeader("X-Card-Number")
+		if cardNumber == "" {
+			cardNumber = "4111111111111111" // Test card number
+		}
+
+		// Extract W3C Trace Context headers
+		traceparent := c.GetHeader("traceparent")
+		tracestate := c.GetHeader("tracestate")
+
+		logMessage("info", "Payment request initiated", map[string]interface{}{
+			"userId":      userId,
+			"traceparent": traceparent,
+		})
+
+		// CRITICAL: Call validation API BEFORE processing payment
+		// Forward the W3C trace headers to maintain trace continuity
+		isValid, err := callValidationAPI(cardNumber, traceparent, tracestate)
+		if err != nil || !isValid {
+			logMessage("error", "Validation API call failed, rejecting payment", map[string]interface{}{
+				"userId": userId,
+				"error":  err,
+			})
+			c.JSON(http.StatusPaymentRequired, gin.H{
+				"success": false,
+				"service": serviceName,
+				"message": "Card validation failed. Payment rejected.",
+			})
+			return
 		}
 
 		// Chaos Engine: Billing500

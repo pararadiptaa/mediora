@@ -30,6 +30,8 @@ services:
     depends_on:
       - appointment-api
       - billing-api
+      - validation-api
+      - records-api
     restart: unless-stopped
 
   # ── Appointment API (Node.js / Express) ─────────────────────────────
@@ -73,6 +75,7 @@ services:
     environment:
       PORT: "3002"
       SERVICE_NAME: "billing-api"
+      VALIDATION_API_URL: "http://validation-api:3003"
       # ── APM Tracing (W3C Config) ──
       DT_PROPAGATION_HEADERS: "w3c,tracecontext"
       DT_TAGS: "project:mediora,language:golang,mode:native"
@@ -81,6 +84,38 @@ services:
       CHAOS_DELAY_SECONDS: "120"
     expose:
       - "3002"
+    depends_on:
+      - validation-api
+    restart: unless-stopped
+
+  # ── Validation API (Node.js / Express) ──────────────────────────────
+  validation-api:
+    build:
+      context: ./services/validation
+      dockerfile: Dockerfile
+    container_name: mediora-validation-api
+    environment:
+      PORT: "3003"
+      SERVICE_NAME: "validation-api"
+      # ── APM Tracing (W3C Config) ──
+      DT_PROPAGATION_HEADERS: "w3c,tracecontext"
+    expose:
+      - "3003"
+    restart: unless-stopped
+
+  # ── Records API (Node.js / Express) ─────────────────────────────────
+  records-api:
+    build:
+      context: ./services/records
+      dockerfile: Dockerfile
+    container_name: mediora-records-api
+    environment:
+      PORT: "3004"
+      SERVICE_NAME: "records-api"
+      # ── APM Tracing (W3C Config) ──
+      DT_PROPAGATION_HEADERS: "w3c,tracecontext"
+    expose:
+      - "3004"
     restart: unless-stopped
 
   # ── Loadgen Bot (Playwright) ────────────────────────────────────────
@@ -96,6 +131,8 @@ services:
       - frontend
       - appointment-api
       - billing-api
+      - validation-api
+      - records-api
     restart: unless-stopped
 
 volumes:
