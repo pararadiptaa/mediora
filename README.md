@@ -159,8 +159,8 @@ To ensure your APM receives realistic, continuous telemetry, the **Loadgen Bot**
 ## 🔥 Chaos Engine Configuration
 
 Mediora includes a configurable Chaos Engine that injects specific problems into the microservices. This is controlled entirely via environment variables in `docker-compose.yml`—no code changes required.
-
 ### Global Chaos Variables
+
 
 | Variable | Target Service | Description |
 |----------|----------------|-------------|
@@ -200,7 +200,7 @@ Start the entire stack, including the traffic generator and chaos engine, with a
 
 ```bash
 # 1. Clone the repository
-git clone <repo-url>
+git clone https://github.com/pararadiptaa/mediora.git
 cd mediora
 
 # 2. Start the distributed trace environment
