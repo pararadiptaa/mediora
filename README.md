@@ -127,9 +127,25 @@ Mediora includes a configurable Chaos Engine that injects specific problems into
 
 | Variable | Target Service | Description |
 |----------|----------------|-------------|
-| `MEDIORA_PROBLEMS` | appointment-api, billing-api | Comma-separated list of active problems. Leave empty (`""`) to disable. |
-| `CHAOS_DELAY_SECONDS` | appointment-api, billing-api | Seconds after startup *before* chaos activates. Delays chaos to allow your APM to baseline normal traffic. |
-| `LOADGEN_VPM` | loadgen | Visits Per Minute. Controls the intensity of the automated traffic (Default: `2`). |
+| `MEDIORA_PROBLEMS` | appointment-api, billing-api | Comma-separated list of active problems. Leave empty (`""`) to disable all chaos. To isolate a single pattern, set only one value (e.g. `"Billing500"`). |
+| `CHAOS_DELAY_SECONDS` | appointment-api, billing-api | Seconds after startup *before* chaos activates. Allows your APM tool to discover services and baseline normal traffic before anomalies appear. Default: `300` (5 min). |
+| `LOADGEN_VPM` | loadgen | Visits Per Minute. Controls the intensity of the automated traffic. Default: `2`. |
+
+#### Choosing a `CHAOS_DELAY_SECONDS` value
+
+The right value depends on how much baseline data your APM needs before chaos begins:
+
+| Scenario | Recommended Value |
+|----------|-------------------|
+| Quick demo / smoke test | `300` (5 min) — **default** |
+| General APM evaluation | `900` (15 min) |
+| Dynatrace Davis AI anomaly detection | `7500` (≈ 2 hours) |
+
+> **Dynatrace note:** Davis AI requires a sustained period of error-free traffic to learn normal performance baselines before it can detect deviations. Dynatrace's own easyTravel demo application recommends `7500` seconds for this reason. Set `CHAOS_DELAY_SECONDS: "7500"` in `docker-compose.yml` when running a formal Dynatrace evaluation.
+
+#### Stacking behaviour
+
+When multiple problems are listed in `MEDIORA_PROBLEMS`, all of them activate simultaneously after the delay. For example, the default appointment-api config (`SlowDatabaseQuery,CpuSpike`) means every booking request after the delay will incur both the +3 s DB sleep **and** the +500 ms CPU burn. To test a single problem pattern in isolation, remove the others from the list.
 
 ### Available Problem Patterns
 

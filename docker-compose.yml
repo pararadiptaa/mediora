@@ -59,7 +59,9 @@ services:
       OTEL_PROPAGATORS: "tracecontext,baggage"
       # ── Chaos Engineering ──
       MEDIORA_PROBLEMS: "SlowDatabaseQuery,CpuSpike"
-      CHAOS_DELAY_SECONDS: "120"
+      # 300 s (5 min) lets APM discover services and baseline normal traffic.
+      # For Dynatrace Davis AI baselining, raise to 7500 (≈ 2 hours).
+      CHAOS_DELAY_SECONDS: "300"
     expose:
       - "3001"
     depends_on:
@@ -90,7 +92,9 @@ services:
       DT_TAGS: "project:mediora,language:golang,mode:native"
       # ── Chaos Engineering ──
       MEDIORA_PROBLEMS: "Billing500"
-      CHAOS_DELAY_SECONDS: "120"
+      # 300 s (5 min) lets APM discover services and baseline normal traffic.
+      # For Dynatrace Davis AI baselining, raise to 7500 (≈ 2 hours).
+      CHAOS_DELAY_SECONDS: "300"
     expose:
       - "3002"
     depends_on:
