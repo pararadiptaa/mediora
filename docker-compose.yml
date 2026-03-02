@@ -144,6 +144,8 @@ services:
     restart: unless-stopped
 
   # ── Loadgen Bot (Playwright) ────────────────────────────────────────
+  # Generates realistic browser-level user sessions at low volume.
+  # Produces browser RUM traces and exercises the full UI flow.
   loadgen:
     build:
       context: ./loadgen
@@ -152,6 +154,29 @@ services:
     environment:
       BASE_URL: "http://frontend:80"
       LOADGEN_VPM: "2"
+    depends_on:
+      - frontend
+      - appointment-api
+      - billing-api
+      - validation-api
+      - records-api
+    restart: unless-stopped
+
+  # ── API Loadgen (high-volume HTTP) ───────────────────────────────────
+  # Fires direct HTTP requests at high volume without a browser.
+  # Saturates Dynatrace service-level traces (response times, error rates,
+  # DB call frequency, distributed trace chains) at a configurable rate.
+  # Increase API_LOADGEN_RPM for higher volume; raise API_LOADGEN_CONCURRENCY
+  # if requests start timing out under load.
+  api-loadgen:
+    build:
+      context: ./loadgen
+      dockerfile: api.Dockerfile
+    container_name: mediora-api-loadgen
+    environment:
+      BASE_URL: "http://frontend:80"
+      API_LOADGEN_RPM: "60"
+      API_LOADGEN_CONCURRENCY: "5"
     depends_on:
       - frontend
       - appointment-api

@@ -20,6 +20,7 @@ graph TD
 
     %% Nodes
     Loadgen["🤖 Loadgen<br/>(Playwright)"]:::client
+    ApiLoadgen["⚡ API Loadgen<br/>(Node.js / axios)"]:::client
     Browser["🌐 Web Browser<br/>(User)"]:::client
     
     Nginx["🛡️ Nginx Proxy<br/>(:8080)"]:::proxy
@@ -32,7 +33,8 @@ graph TD
     Postgres[("🐘 PostgreSQL<br/>(Port 5432)")]:::db
 
     %% Connections - Clients to Proxy
-    Loadgen -->|HTTP Requests| Nginx
+    Loadgen -->|Browser Sessions<br/>(2 VPM)| Nginx
+    ApiLoadgen -->|Direct API Calls<br/>(60+ RPM)| Nginx
     Browser -->|HTTP Requests| Nginx
     
     %% Connections - Proxy to Services
@@ -60,7 +62,8 @@ graph TD
 | **validation-api** | Node.js / Express | Validates payment cards (200ms latency); propagates W3C trace context. |
 | **records-api** | Node.js / Express | Fetches medical records and patient history from PostgreSQL. |
 | **postgres** | PostgreSQL 15 | **Ephemeral stateful storage** — schema and seed data are re-initialized on every container start via `tmpfs`. Ensures `init.sql` always runs fresh, keeping the schema in sync with code. |
-| **loadgen** | Playwright (Chromium) | Headless bot that drives continuous, realistic user traffic. |
+| **loadgen** | Playwright (Chromium) | Headless browser bot that drives realistic user sessions at low volume (browser RUM, full UI flow). |
+| **api-loadgen** | Node.js / axios | Lightweight HTTP load generator. Fires direct API requests at high volume to saturate Dynatrace service-level traces. |
 
 ---
 
@@ -104,6 +107,38 @@ The PostgreSQL database includes five core tables:
 ```
 
 All database operations are **logged with W3C Trace Context headers**, enabling complete visibility in your APM tool (Dynatrace, Datadog, Jaeger, etc.).
+
+---
+
+## 📡 Traffic Generation
+
+Mediora uses a **two-tier traffic strategy** to produce both browser-level telemetry and high-volume API-level traces simultaneously.
+
+| Service | Tool | Volume | Purpose |
+|---------|------|--------|---------|
+| `loadgen` | Playwright (Chromium) | 2 VPM (default) | Full browser sessions — browser RUM, user journey traces, UI flow coverage |
+| `api-loadgen` | Node.js / axios | 60 RPM (default) | Direct HTTP requests — high-volume service traces, response time distributions, error rates, DB call frequency |
+
+Both run in parallel. The Playwright bot handles the user experience layer; the API loadgen saturates the backend service topology in Dynatrace.
+
+### Traffic Generation Variables
+
+| Variable | Service | Description | Default |
+|----------|---------|-------------|---------|
+| `LOADGEN_VPM` | loadgen | Browser visits per minute | `2` |
+| `API_LOADGEN_RPM` | api-loadgen | HTTP requests per minute | `60` |
+| `API_LOADGEN_CONCURRENCY` | api-loadgen | Max concurrent in-flight requests | `5` |
+
+#### Scaling `API_LOADGEN_RPM`
+
+| Target | `API_LOADGEN_RPM` | `API_LOADGEN_CONCURRENCY` | Notes |
+|--------|-------------------|---------------------------|-------|
+| Light (visible in DT) | `60` | `5` | **Default** — 1 req/sec |
+| Medium | `200` | `10` | ~3 req/sec, clear service saturation |
+| Heavy | `600` | `20` | ~10 req/sec, stress-tests the stack |
+| Extreme | `1200` | `40` | ~20 req/sec — ensure your host has ≥4 vCPU |
+
+> **Note:** The api-loadgen fires **70% booking requests** (full `appointment-api → billing-api → validation-api → postgres` chain) and **30% records requests** (`records-api → postgres`), covering all four backend services. Dr. Chaos is excluded from this pool — chaos injection is the Playwright bot's role.
 
 ---
 
@@ -221,9 +256,12 @@ mediora/
 │   └── db/
 │       └── init.sql            # PostgreSQL schema and seed data
 └── loadgen/
-    ├── Dockerfile              # Playwright Chromium environment
-    ├── package.json
-    └── bot.js                  # Playwright automation script executing 5 Personas
+    ├── Dockerfile              # Playwright Chromium environment (browser loadgen)
+    ├── package.json            # Playwright dependency
+    ├── bot.js                  # Playwright bot — 5 user personas
+    ├── api.Dockerfile          # Lightweight Node.js alpine image (HTTP loadgen)
+    ├── api-package.json        # axios-only dependency (no Playwright/Chromium)
+    └── api-bot.js              # HTTP load generator — high-volume direct API calls
 ```
 
 ---
