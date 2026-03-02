@@ -178,18 +178,24 @@ app.post("/api/appointments/book", async (req, res) => {
       log("warn", "Slow query completed", { userId });
     }
 
+    // ── Resolve doctor_id from doctors table ─────────────────────
+    const doctorName = req.body?.doctor || "Dr. Tirta";
+    const doctorLookup = await pool.query(
+      "SELECT id, name, specialty FROM doctors WHERE name = $1 LIMIT 1",
+      [doctorName]
+    );
+    const doctorRow = doctorLookup.rows[0] || { id: 1, name: doctorName, specialty: "General" };
+
     // ── Insert appointment into PostgreSQL ───────────────────────
-    const doctor = req.body?.doctor || "Dr. Tirta";
-    const specialty = req.body?.specialty || "Cardiology";
     const insertResult = await pool.query(
-      `INSERT INTO appointments (user_id, user_name, doctor, specialty)
-       VALUES ($1, $2, $3, $4)
-       RETURNING *`,
-      [userId, userName, doctor, specialty]
+      `INSERT INTO appointments (user_id, doctor_id, status)
+       VALUES ($1, $2, 'pending')
+       RETURNING id, user_id, doctor_id, appointment_date, status`,
+      [userId, doctorRow.id]
     );
     const row = insertResult.rows[0];
     const appointmentId = row.id;
-    log("info", "Appointment inserted into DB", { appointmentId, userId, doctor });
+    log("info", "Appointment inserted into DB", { appointmentId, userId, doctor: doctorRow.name });
 
     // ── Call Billing API with appointment_id ─────────────────────
     log("info", "Calling Billing API to process payment…", { appointmentId });
@@ -222,10 +228,10 @@ app.post("/api/appointments/book", async (req, res) => {
       appointment: {
         id: `APT-${appointmentId}`,
         dbId: appointmentId,
-        doctor: row.doctor,
-        specialty: row.specialty,
+        doctor: doctorRow.name,
+        specialty: doctorRow.specialty,
         date: row.appointment_date,
-        createdAt: row.created_at,
+        status: row.status,
       },
       billing: billing.body,
     });
@@ -246,10 +252,12 @@ app.get("/api/appointments/list/:userId", async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT id, user_id, user_name, doctor, specialty, appointment_date, created_at
-       FROM appointments
-       WHERE user_id = $1
-       ORDER BY appointment_date DESC`,
+      `SELECT a.id, a.user_id, a.appointment_date, a.status,
+              d.name AS doctor, d.specialty
+       FROM appointments a
+       JOIN doctors d ON a.doctor_id = d.id
+       WHERE a.user_id = $1
+       ORDER BY a.appointment_date DESC`,
       [userId]
     );
 

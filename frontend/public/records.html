@@ -161,8 +161,11 @@
 
                     const row = document.createElement('tr');
                     row.className = 'hover:bg-slate-50/50 transition-colors';
+                    const displayDate = record.date
+                        ? new Date(record.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+                        : '—';
                     row.innerHTML = `
-                        <td class="px-6 py-4 font-medium text-slate-900">${record.date}</td>
+                        <td class="px-6 py-4 font-medium text-slate-900">${displayDate}</td>
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-2">
                                 <span class="material-symbols-outlined text-slate-400 text-lg">${record.icon || 'description'}</span>

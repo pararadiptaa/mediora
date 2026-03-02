@@ -173,7 +173,7 @@ app.get("/api/records/:userId", async (req, res) => {
 app.get("/api/users", async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT user_id, name, email, phone, status FROM users ORDER BY created_at ASC"
+      "SELECT user_id, name FROM users ORDER BY user_id ASC"
     );
 
     log("info", "Users list retrieved", {
