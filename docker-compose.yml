@@ -9,8 +9,10 @@ services:
       POSTGRES_DB: mediora_db
     volumes:
       - ./services/db/init.sql:/docker-entrypoint-initdb.d/init.sql
-      # No named pgdata volume — ephemeral storage guarantees init.sql
-      # always runs fresh on every 'docker compose up', keeping schema in sync.
+    tmpfs:
+      - /var/lib/postgresql/data
+      # tmpfs = RAM-disk, always empty on container start/restart.
+      # Guarantees init.sql runs every time, keeping schema in sync.
     expose:
       - "5432"
     healthcheck:
