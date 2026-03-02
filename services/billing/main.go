@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,6 +14,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	_ "github.com/lib/pq"
 )
 
 var (
@@ -22,6 +24,14 @@ var (
 	chaosDelaySeconds = getEnvAsInt("CHAOS_DELAY_SECONDS", 0)
 	startupTime       = time.Now()
 	validationAPIURL  = getEnv("VALIDATION_API_URL", "http://validation-api:3003")
+	
+	// Database configuration
+	dbHost     = getEnv("DB_HOST", "postgres")
+	dbPort     = getEnv("DB_PORT", "5432")
+	dbUser     = getEnv("DB_USER", "mediora")
+	dbPassword = getEnv("DB_PASSWORD", "mediora_pass")
+	dbName     = getEnv("DB_NAME", "mediora_db")
+	db         *sql.DB
 )
 
 // Helper to get string env var
@@ -169,18 +179,68 @@ func callValidationAPI(cardNumber, traceparent, tracestate string) (bool, error)
 	return false, fmt.Errorf("validation service returned status %d", resp.StatusCode)
 }
 
+// initDatabase initializes the PostgreSQL connection pool
+func initDatabase() error {
+	connStr := fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		dbHost, dbPort, dbUser, dbPassword, dbName,
+	)
+
+	var err error
+	db, err = sql.Open("postgres", connStr)
+	if err != nil {
+		return err
+	}
+
+	// Configure connection pool
+	db.SetMaxOpenConns(25)
+	db.SetMaxIdleConns(5)
+	db.SetConnMaxLifetime(5 * time.Minute)
+
+	// Test the connection
+	err = db.Ping()
+	if err != nil {
+		return err
+	}
+
+	logMessage("info", "Database connection established", map[string]interface{}{
+		"host":     dbHost,
+		"database": dbName,
+	})
+
+	return nil
+}
+
 func main() {
+	// Initialize database connection
+	if err := initDatabase(); err != nil {
+		logMessage("error", "Failed to initialize database", map[string]interface{}{"error": err.Error()})
+		os.Exit(1)
+	}
+	defer db.Close()
+
 	// Initialize Gin
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.Use(gin.Recovery())
 	r.Use(jsonLoggerMiddleware())
 
-	// Health Check
+	// Health Check with database verification
 	r.GET("/health", func(c *gin.Context) {
+		err := db.Ping()
+		if err != nil {
+			c.JSON(http.StatusServiceUnavailable, gin.H{
+				"status":   "unhealthy",
+				"service":  serviceName,
+				"database": "disconnected",
+				"error":    err.Error(),
+			})
+			return
+		}
 		c.JSON(http.StatusOK, gin.H{
-			"status":  "ok",
-			"service": serviceName,
+			"status":   "ok",
+			"service":  serviceName,
+			"database": "connected",
 		})
 	})
 
@@ -191,10 +251,31 @@ func main() {
 			userId = "unknown"
 		}
 
-		// Extract card number from request (optional for testing)
+		// Parse the request body to extract appointment_id
+		var req struct {
+			AppointmentID int    `json:"appointment_id"`
+			Invoice       string `json:"invoice"`
+			Amount        float64 `json:"amount"`
+		}
+
+		if err := c.ShouldBindJSON(&req); err != nil {
+			logMessage("error", "Invalid request body", map[string]interface{}{
+				"userId": userId,
+				"error":  err.Error(),
+			})
+			c.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"message": "Invalid request body - appointment_id is required",
+			})
+			return
+		}
+
+		appointmentID := req.AppointmentID
+
+		// Extract card number (default for testing)
 		cardNumber := c.GetHeader("X-Card-Number")
 		if cardNumber == "" {
-			cardNumber = "4111111111111111" // Test card number
+			cardNumber = "4111111111111111"
 		}
 
 		// Extract W3C Trace Context headers
@@ -202,17 +283,55 @@ func main() {
 		tracestate := c.GetHeader("tracestate")
 
 		logMessage("info", "Payment request initiated", map[string]interface{}{
-			"userId":      userId,
-			"traceparent": traceparent,
+			"userId":        userId,
+			"appointmentID": appointmentID,
+			"traceparent":   traceparent,
 		})
 
-		// CRITICAL: Call validation API BEFORE processing payment
-		// Forward the W3C trace headers to maintain trace continuity
+		// ── DB SELECT: Verify appointment exists ──────────────────
+		var appointmentStatus string
+		err := db.QueryRow(
+			"SELECT status FROM appointments WHERE id = $1",
+			appointmentID,
+		).Scan(&appointmentStatus)
+
+		if err != nil {
+			if err == sql.ErrNoRows {
+				logMessage("error", "Appointment not found in database", map[string]interface{}{
+					"appointmentID": appointmentID,
+					"userId":        userId,
+				})
+				c.JSON(http.StatusNotFound, gin.H{
+					"success": false,
+					"service": serviceName,
+					"message": "Appointment not found",
+				})
+				return
+			}
+			logMessage("error", "Database query failed", map[string]interface{}{
+				"appointmentID": appointmentID,
+				"error":         err.Error(),
+			})
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"service": serviceName,
+				"message": "Database error",
+			})
+			return
+		}
+
+		logMessage("info", "Appointment verified in database", map[string]interface{}{
+			"appointmentID":     appointmentID,
+			"appointmentStatus": appointmentStatus,
+		})
+
+		// ── Call Validation API ──────────────────────────────────
 		isValid, err := callValidationAPI(cardNumber, traceparent, tracestate)
 		if err != nil || !isValid {
 			logMessage("error", "Validation API call failed, rejecting payment", map[string]interface{}{
-				"userId": userId,
-				"error":  err,
+				"appointmentID": appointmentID,
+				"userId":        userId,
+				"error":         err,
 			})
 			c.JSON(http.StatusPaymentRequired, gin.H{
 				"success": false,
@@ -222,12 +341,18 @@ func main() {
 			return
 		}
 
-		// Chaos Engine: Billing500
+		// ── Chaos Engine: Billing500 ────────────────────────────
 		if isChaosActive("Billing500") {
-			logMessage("warn", "CHAOS Billing500 evaluated", map[string]interface{}{"userId": userId})
+			logMessage("warn", "CHAOS Billing500 evaluated", map[string]interface{}{
+				"userId":        userId,
+				"appointmentID": appointmentID,
+			})
 			// 40% chance to fail
 			if rand.Float32() < 0.40 {
-				logMessage("error", "CHAOS Billing500 injected 500 error", map[string]interface{}{"userId": userId})
+				logMessage("error", "CHAOS Billing500 injected 500 error", map[string]interface{}{
+					"userId":        userId,
+					"appointmentID": appointmentID,
+				})
 				c.JSON(http.StatusInternalServerError, gin.H{
 					"success": false,
 					"service": serviceName,
@@ -237,17 +362,44 @@ func main() {
 			}
 		}
 
-		logMessage("info", "Payment processed explicitly", map[string]interface{}{"userId": userId, "amount": 150.0})
+		// ── DB UPDATE: Mark appointment as paid ──────────────────
+		_, err = db.Exec(
+			"UPDATE appointments SET status = 'paid' WHERE id = $1",
+			appointmentID,
+		)
+
+		if err != nil {
+			logMessage("error", "Failed to update appointment status", map[string]interface{}{
+				"appointmentID": appointmentID,
+				"error":         err.Error(),
+			})
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"service": serviceName,
+				"message": "Payment processed but failed to update appointment status",
+			})
+			return
+		}
+
+		logMessage("info", "Payment processed successfully and appointment updated", map[string]interface{}{
+			"appointmentID": appointmentID,
+			"userId":        userId,
+			"amount":        req.Amount,
+		})
+
 		c.JSON(http.StatusOK, gin.H{
 			"success": true,
 			"service": serviceName,
 			"message": "Payment processed successfully.",
-			"amount":  150.0,
+			"amount":  req.Amount,
+			"appointmentID": appointmentID,
+			"status": "paid",
 		})
 	})
 
 	// Start Server
 	logMessage("info", fmt.Sprintf("%s listening on port %s", serviceName, port), nil)
+	logMessage("info", fmt.Sprintf("Database: %s on %s:%s", dbName, dbHost, dbPort), nil)
 	if len(medioraProblems) > 0 {
 		logMessage("info", fmt.Sprintf("Chaos problems configured: %v - activation delay: %ds", medioraProblems, chaosDelaySeconds), nil)
 	}

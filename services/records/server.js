@@ -1,8 +1,21 @@
 const express = require("express");
+const { Pool } = require("pg");
 
 // ── Config from environment ──────────────────────────────────────────
 const PORT = parseInt(process.env.PORT, 10) || 3004;
 const SERVICE_NAME = process.env.SERVICE_NAME || "records-api";
+
+// ── PostgreSQL Pool Configuration ────────────────────────────────────
+const pool = new Pool({
+  host: process.env.DB_HOST || "postgres",
+  port: parseInt(process.env.DB_PORT, 10) || 5432,
+  user: process.env.DB_USER || "mediora",
+  password: process.env.DB_PASSWORD || "mediora_pass",
+  database: process.env.DB_NAME || "mediora_db",
+  max: 10,
+  connectionTimeoutMillis: 5000,
+  idleTimeoutMillis: 30000,
+});
 
 // ── Helpers ──────────────────────────────────────────────────────────
 function log(level, msg, extra = {}) {
@@ -17,98 +30,28 @@ function log(level, msg, extra = {}) {
 }
 
 /**
- * Mock medical records database
- * Maps userId to an array of medical records
+ * Resolve user_id from user name if needed
+ * Maps friendly display names to actual user_ids
  */
-const mockRecords = {
-  user1: [
-    {
-      id: 1,
-      date: "2023-10-24",
-      type: "Blood Test (CBC)",
-      icon: "bloodtype",
-      doctor: "Dr. Sarah Jenkins",
-      facility: "Mediora Main Lab",
-      status: "Completed",
-    },
-    {
-      id: 2,
-      date: "2023-10-10",
-      type: "Chest X-Ray",
-      icon: "radiology",
-      doctor: "Dr. Tirta",
-      facility: "Radiology Dept, 2F",
-      status: "Completed",
-    },
-    {
-      id: 3,
-      date: "2023-09-28",
-      type: "Cardiology Consultation",
-      icon: "ecg_heart",
-      doctor: "Dr. Tirta",
-      facility: "Room 304, Main Building",
-      status: "Archived",
-    },
-    {
-      id: 4,
-      date: "2023-08-15",
-      type: "Flu Vaccination",
-      icon: "vaccines",
-      doctor: "Dr. Emily Williams",
-      facility: "General Clinic, 1F",
-      status: "Completed",
-    },
-    {
-      id: 5,
-      date: "2023-07-03",
-      type: "Full Body Check-Up",
-      icon: "monitoring",
-      doctor: "Dr. Michael Jones",
-      facility: "Mediora Main Lab",
-      status: "Completed",
-    },
-    {
-      id: 6,
-      date: "2023-05-18",
-      type: "Dental Cleaning",
-      icon: "dentistry",
-      doctor: "Dr. Sisca",
-      facility: "Dental Wing, Room 105",
-      status: "Archived",
-    },
-  ],
-  user2: [
-    {
-      id: 101,
-      date: "2024-02-10",
-      type: "Annual Physical",
-      icon: "monitoring",
-      doctor: "Dr. Smith",
-      facility: "Main Building",
-      status: "Completed",
-    },
-    {
-      id: 102,
-      date: "2024-01-15",
-      type: "Lab Work",
-      icon: "bloodtype",
-      doctor: "Dr. Johnson",
-      facility: "Lab, 1F",
-      status: "Completed",
-    },
-  ],
-  user3: [
-    {
-      id: 201,
-      date: "2024-03-01",
-      type: "Orthopedic Consultation",
-      icon: "skeleton",
-      doctor: "Dr. Williams",
-      facility: "Orthopedic Clinic",
-      status: "Completed",
-    },
-  ],
-};
+async function resolveUserId(userIdentifier) {
+  try {
+    // Try to find by user_id first
+    const result = await pool.query(
+      "SELECT user_id FROM users WHERE user_id = $1 OR name = $1 LIMIT 1",
+      [userIdentifier]
+    );
+    
+    if (result.rows.length > 0) {
+      return result.rows[0].user_id;
+    }
+    
+    // If not found, return the identifier as-is (might be a valid user_id)
+    return userIdentifier;
+  } catch (error) {
+    log("error", "Failed to resolve user_id", { error: error.message });
+    return userIdentifier; // Fallback
+  }
+}
 
 // ── Express setup ────────────────────────────────────────────────────
 const app = express();
@@ -131,41 +74,124 @@ app.use((req, res, next) => {
 });
 
 // ── Health Check ─────────────────────────────────────────────────────
-app.get("/health", (req, res) => {
-  res.json({
-    status: "ok",
-    service: SERVICE_NAME,
-  });
+app.get("/health", async (req, res) => {
+  try {
+    // Verify database connectivity
+    const client = await pool.connect();
+    const result = await client.query("SELECT NOW()");
+    client.release();
+
+    res.json({
+      status: "ok",
+      service: SERVICE_NAME,
+      database: "connected",
+      timestamp: result.rows[0].now,
+    });
+  } catch (error) {
+    log("error", "Health check failed", { error: error.message });
+    res.status(503).json({
+      status: "unhealthy",
+      service: SERVICE_NAME,
+      error: error.message,
+    });
+  }
 });
 
 // ── Get Medical Records Endpoint ────────────────────────────────────
 /**
  * GET /api/records/:userId
  * 
- * Returns a JSON array of medical records for the given userId.
- * If the userId is not found, returns an empty array.
+ * Returns medical records for the given userId from the database.
  * 
- * Response: { "userId": "user1", "records": [...], "count": 6 }
+ * Query: SELECT * FROM medical_records WHERE user_id = $1
+ * 
+ * Response: { "userId": "user2", "records": [...], "count": 6 }
  */
-app.get("/api/records/:userId", (req, res) => {
+app.get("/api/records/:userId", async (req, res) => {
   const { userId } = req.params;
   const traceContext = req.get("traceparent");
 
-  // Look up records for this user (or empty array if not found)
-  const records = mockRecords[userId] || [];
+  try {
+    // Resolve the user_id (in case a name is passed)
+    const resolvedUserId = await resolveUserId(userId);
 
-  log("info", "Medical records retrieved", {
-    userId,
-    recordCount: records.length,
-    traceparent: traceContext,
-  });
+    log("info", "Fetching medical records from database", {
+      inputUserId: userId,
+      resolvedUserId,
+      traceparent: traceContext,
+    });
 
-  res.json({
-    userId,
-    records,
-    count: records.length,
-    timestamp: new Date().toISOString(),
-  });
+    // Query medical records for this user
+    const query =
+      "SELECT id, user_id, record_date, record_type, icon, doctor_name, facility, status, description FROM medical_records WHERE user_id = $1 ORDER BY record_date DESC";
+    
+    const result = await pool.query(query, [resolvedUserId]);
+    const records = result.rows;
+
+    // Transform database records to match frontend expectations
+    const transformedRecords = records.map((record) => ({
+      id: record.id,
+      date: record.record_date, // Database stores as DATE, but return as ISO string
+      type: record.record_type,
+      icon: record.icon,
+      doctor: record.doctor_name,
+      facility: record.facility,
+      status: record.status,
+      description: record.description,
+    }));
+
+    log("info", "Medical records retrieved successfully", {
+      userId: resolvedUserId,
+      recordCount: records.length,
+      traceparent: traceContext,
+    });
+
+    res.json({
+      userId: resolvedUserId,
+      records: transformedRecords,
+      count: records.length,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    log("error", "Failed to fetch medical records", {
+      userId,
+      error: error.message,
+    });
+    res.status(500).json({
+      error: "Failed to fetch medical records",
+      service: SERVICE_NAME,
+      message: error.message,
+    });
+  }
+});
+
+// ── Get All Users Endpoint (for debugging) ──────────────────────────
+/**
+ * GET /api/users
+ * Returns list of all users in the system
+ */
+app.get("/api/users", async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT user_id, name, email, phone, status FROM users ORDER BY created_at ASC"
+    );
+
+    log("info", "Users list retrieved", {
+      userCount: result.rows.length,
+    });
+
+    res.json({
+      users: result.rows,
+      count: result.rows.length,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    log("error", "Failed to fetch users list", { error: error.message });
+    res.status(500).json({
+      error: "Failed to fetch users",
+      service: SERVICE_NAME,
+    });
+  }
 });
 
 // ── Error handling ───────────────────────────────────────────────────
@@ -180,7 +206,20 @@ app.use((err, req, res, next) => {
   });
 });
 
+// ── Graceful Shutdown ────────────────────────────────────────────────
+process.on("SIGINT", () => {
+  log("info", "Shutting down gracefully", {});
+  pool.end(() => {
+    log("info", "Database pool closed", {});
+    process.exit(0);
+  });
+});
+
 // ── Start Server ─────────────────────────────────────────────────────
 app.listen(PORT, "0.0.0.0", () => {
   log("info", `${SERVICE_NAME} listening on port ${PORT}`, {});
+  log("info", "Connected to database", {
+    host: process.env.DB_HOST || "postgres",
+    database: process.env.DB_NAME || "mediora_db",
+  });
 });

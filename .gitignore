@@ -1,42 +1,59 @@
-# Dependencies
+# --- Logs & Temp ---
+*.log
+tmp/
+.DS_Store
+
+# --- Node.js ---
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 .npm/
-.venv/
-env/
-venv/
-ENV/
+
+# --- Golang ---
+# Ignore compiled binaries
+services/billing/billing-api
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+# Go workspace & coverage
+go.work
+*.out
+
+# --- Python (Legacy Cleanup) ---
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+.venv/
+venv/
+env/
+ENV/
 
-# Environment Variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Docker
+# --- Docker ---
 .docker/
 docker-compose.override.yml
+# Ignore local database data if mapped to host
+pgdata/
+postgres-data/
 
-# IDEs and Editors
+# --- IDEs and Editors ---
 .vscode/
 .idea/
 *.swp
 *.swo
-.DS_Store
 
-# Testing and Reports
+# --- Testing and Reports (Playwright) ---
 test-results/
 playwright-report/
 blob-report/
 playwright/.cache/
 
-# User Documents (Walkthroughs and system generated files)
+# --- Project Specific & AI Artifacts ---
 walkthrough*.md*
 .system_generated/
 .gemini/
 brain/
-tmp/

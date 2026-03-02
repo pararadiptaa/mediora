@@ -76,6 +76,12 @@ services:
       PORT: "3002"
       SERVICE_NAME: "billing-api"
       VALIDATION_API_URL: "http://validation-api:3003"
+      # ── Database Configuration ──
+      DB_HOST: "postgres"
+      DB_PORT: "5432"
+      DB_USER: "mediora"
+      DB_PASSWORD: "mediora_pass"
+      DB_NAME: "mediora_db"
       # ── APM Tracing (W3C Config) ──
       DT_PROPAGATION_HEADERS: "w3c,tracecontext"
       DT_TAGS: "project:mediora,language:golang,mode:native"
@@ -85,7 +91,10 @@ services:
     expose:
       - "3002"
     depends_on:
-      - validation-api
+      postgres:
+        condition: service_healthy
+      validation-api:
+        condition: service_started
     restart: unless-stopped
 
   # ── Validation API (Node.js / Express) ──────────────────────────────
@@ -112,10 +121,19 @@ services:
     environment:
       PORT: "3004"
       SERVICE_NAME: "records-api"
+      # ── Database Configuration ──
+      DB_HOST: "postgres"
+      DB_PORT: "5432"
+      DB_USER: "mediora"
+      DB_PASSWORD: "mediora_pass"
+      DB_NAME: "mediora_db"
       # ── APM Tracing (W3C Config) ──
       DT_PROPAGATION_HEADERS: "w3c,tracecontext"
     expose:
       - "3004"
+    depends_on:
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
 
   # ── Loadgen Bot (Playwright) ────────────────────────────────────────

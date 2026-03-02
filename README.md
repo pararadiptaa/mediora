@@ -16,39 +16,92 @@ graph TD
     classDef client fill:#f9f9f9,stroke:#333,stroke-width:2px;
     classDef proxy fill:#e1f5fe,stroke:#0288d1,stroke-width:2px;
     classDef service fill:#fff3e0,stroke:#f57c00,stroke-width:2px;
-    classDef db fill:#e8f5e9,stroke:#388e3c,stroke-width:2px;
+    classDef db fill:#e8f5e9,stroke:#388e3c,stroke-width:3px;
 
     %% Nodes
-    Loadgen["🤖 Loadgen<br/>"]:::client
+    Loadgen["🤖 Loadgen<br/>(Playwright)"]:::client
     Browser["🌐 Web Browser<br/>(User)"]:::client
     
     Nginx["🛡️ Nginx Proxy<br/>(:8080)"]:::proxy
     
     ApptAPI["🏥 Appointment API<br/>(Node.js :3001)"]:::service
     BillingAPI["💳 Billing API<br/>(Go :3002)"]:::service
+    ValidationAPI["✅ Validation API<br/>(Node.js :3003)"]:::service
+    RecordsAPI["📋 Records API<br/>(Node.js :3004)"]:::service
     
     Postgres[("🐘 PostgreSQL<br/>(Port 5432)")]:::db
 
-    %% Connections
+    %% Connections - Clients to Proxy
     Loadgen -->|HTTP Requests| Nginx
     Browser -->|HTTP Requests| Nginx
     
-    Nginx -->|Static HTML/Dash| Nginx
+    %% Connections - Proxy to Services
     Nginx -->|/api/appointments/*| ApptAPI
     Nginx -->|/api/billing/*| BillingAPI
+    Nginx -->|/api/validate*| ValidationAPI
+    Nginx -->|/api/records*| RecordsAPI
     
-    ApptAPI -->|Validate/Pay| BillingAPI
-    ApptAPI -->|Read/Write Bookings| Postgres
+    %% Service-to-Service Connections
+    ApptAPI -->|POST /pay<br/>+ W3C Headers| BillingAPI
+    BillingAPI -->|POST /validate-card<br/>+ W3C Headers| ValidationAPI
+    
+    %% Database Connections
+    ApptAPI -->|INSERT/SELECT/UPDATE<br/>Appointments| Postgres
+    BillingAPI -->|SELECT/UPDATE<br/>Appointments| Postgres
+    RecordsAPI -->|SELECT<br/>Medical Records| Postgres
 ```
 
 ### Component Breakdown
 | Service | Technology | Role |
 |---------|------------|------|
 | **frontend** | Nginx + HTML/JS/Tailwind | Serves the static patient portal and reverse-proxies API requests. |
-| **appointment-api** | Node.js / Express | Handles booking logic, interfaces with PostgreSQL, and forwards payments. |
-| **billing-api** | Go / Gin | Processes mock payments with configurable failure rates. Highly optimized compiled binary relying purely on **Native Dynatrace OneAgent Monitoring** to unlock deeper backend insights like Goroutine analysis and CPU profiling. |
-| **postgres** | PostgreSQL 15 | Persistent storage layer for appointment records. |
+| **appointment-api** | Node.js / Express | Books appointments with PostgreSQL persistence; calls billing-api for payment processing. |
+| **billing-api** | Go / Gin | Validates appointments in PostgreSQL, calls validation-api, updates payment status. Optimized for native APM monitoring. |
+| **validation-api** | Node.js / Express | Validates payment cards (200ms latency); propagates W3C trace context. |
+| **records-api** | Node.js / Express | Fetches medical records and patient history from PostgreSQL. |
+| **postgres** | PostgreSQL 15 | **Persistent stateful storage** for users, doctors, appointments, and medical records. Pre-seeded with dummy data. |
 | **loadgen** | Playwright (Chromium) | Headless bot that drives continuous, realistic user traffic. |
+
+---
+
+## 💾 Stateful Database Architecture
+
+Mediora uses a **real PostgreSQL database** instead of mock data, enabling realistic CRUD operations and distributed tracing across the entire data layer. The database is automatically initialized on first startup with pre-seeded dummy data.
+
+### Database Schema
+
+The PostgreSQL database includes four core tables:
+
+- **users** - Patient records (Budi, Siti, John)
+- **doctors** - Provider profiles (Dr. Siska, Dr. Tirta, Dr. Chaos)
+- **appointments** - Booking records with status tracking (pending → paid → completed)
+- **medical_records** - Historical health data for each patient
+
+### End-to-End Booking Flow with DB Tracing
+
+```
+1. Frontend: User clicks "Book Appointment" 
+   ↓
+2. Appointment API (Node.js)
+   └─ INSERT INTO appointments (user_id, doctor, specialty) 
+   └─ Extracts appointment_id from response
+   └─ Calls Billing API with appointment_id in payload
+   ↓
+3. Billing API (Go)
+   ├─ SELECT status FROM appointments WHERE id = $1 (verify exists)
+   ├─ POST /api/validate-card → Validation API (+ W3C headers)
+   ├─ Validates card success
+   └─ UPDATE appointments SET status = 'paid' WHERE id = $1
+   ↓
+4. Records API (independent)
+   └─ SELECT * FROM medical_records WHERE user_id = $1
+   └─ Returns patient history + current appointment status
+   ↓
+5. Frontend
+   └─ Displays confirmation with stored appointment_id
+```
+
+All database operations are **logged with W3C Trace Context headers**, enabling complete visibility in your APM tool (Dynatrace, Datadog, Jaeger, etc.).
 
 ---
 

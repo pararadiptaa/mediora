@@ -72,8 +72,9 @@ function cpuSpikeBurn() {
 
 /**
  * Call the Billing API using axios to ensure APM headers propagate.
+ * Now includes the appointment_id in the payload.
  */
-async function callBillingApi(req, userId) {
+async function callBillingApi(req, userId, appointmentId) {
   const url = `${BILLING_API_URL}/api/billing/pay`;
 
   // Explicit Context Propagation for APM (Dynatrace, OpenTelemetry, etc.)
@@ -86,17 +87,24 @@ async function callBillingApi(req, userId) {
   const traceparent = req.headers["traceparent"];
   if (traceparent) {
     headers["traceparent"] = traceparent.toLowerCase();
-    log("info", "Forwarding traceparent:", { traceparent });
+    log("info", "Forwarding traceparent to billing-api:", { traceparent });
   }
   if (req.headers["tracestate"]) headers["tracestate"] = req.headers["tracestate"];
   if (req.headers["x-dynatrace"]) headers["x-dynatrace"] = req.headers["x-dynatrace"];
 
+  // Payload now includes appointment_id for traceability
+  const payload = {
+    appointment_id: appointmentId,
+    invoice: `INV-${appointmentId}-001`,
+    amount: 150.0,
+    userId: userId,
+  };
+
   try {
-    const res = await axios.post(
-      url,
-      { invoice: "INV-2023-001", amount: 150.0 },
-      { headers, validateStatus: () => true } // Resolve on any HTTP status
-    );
+    const res = await axios.post(url, payload, {
+      headers,
+      validateStatus: () => true, // Resolve on any HTTP status
+    });
     return { status: res.status, body: res.data };
   } catch (err) {
     // Network errors or axios setup errors
@@ -123,8 +131,24 @@ app.use((req, res, next) => {
 });
 
 // Health check
-app.get("/health", (_req, res) => {
-  res.json({ status: "ok", service: SERVICE_NAME });
+app.get("/health", async (_req, res) => {
+  try {
+    // Verify database connectivity
+    const result = await pool.query("SELECT NOW()");
+    res.json({
+      status: "ok",
+      service: SERVICE_NAME,
+      database: "connected",
+      timestamp: result.rows[0].now,
+    });
+  } catch (error) {
+    log("error", "Health check failed", { error: error.message });
+    res.status(503).json({
+      status: "unhealthy",
+      service: SERVICE_NAME,
+      error: error.message,
+    });
+  }
 });
 
 // ── Book appointment ─────────────────────────────────────────────────
@@ -164,29 +188,40 @@ app.post("/api/appointments/book", async (req, res) => {
       [userId, userName, doctor, specialty]
     );
     const row = insertResult.rows[0];
-    log("info", "Appointment inserted into DB", { appointmentId: row.id, userId });
+    const appointmentId = row.id;
+    log("info", "Appointment inserted into DB", { appointmentId, userId, doctor });
 
-    // ── Call Billing API ─────────────────────────────────────────
-    log("info", "Calling Billing API to process payment…");
-    const billing = await callBillingApi(req, userId);
+    // ── Call Billing API with appointment_id ─────────────────────
+    log("info", "Calling Billing API to process payment…", { appointmentId });
+    const billing = await callBillingApi(req, userId, appointmentId);
 
     if (billing.status !== 200) {
-      log("error", "Billing API returned an error", { billingResponse: billing });
+      log("error", "Billing API returned an error", {
+        appointmentId,
+        billingStatus: billing.status,
+        billingResponse: billing.body,
+      });
       return res.status(502).json({
         success: false,
         service: SERVICE_NAME,
-        message: "Payment processing failed — could not book appointment.",
+        message: "Payment processing failed — could not complete booking.",
+        appointmentId,
         billingResponse: billing.body,
       });
     }
+
+    log("info", "Appointment booked successfully with payment processed", {
+      appointmentId,
+      userId,
+    });
 
     res.json({
       success: true,
       service: SERVICE_NAME,
       message: "Appointment booked successfully!",
       appointment: {
-        id: `APT-${row.id}`,
-        dbId: row.id,
+        id: `APT-${appointmentId}`,
+        dbId: appointmentId,
         doctor: row.doctor,
         specialty: row.specialty,
         date: row.appointment_date,
@@ -205,10 +240,74 @@ app.post("/api/appointments/book", async (req, res) => {
   }
 });
 
-// ── Start ────────────────────────────────────────────────────────────
+// ── List appointments by user ────────────────────────────────────────
+app.get("/api/appointments/list/:userId", async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const result = await pool.query(
+      `SELECT id, user_id, user_name, doctor, specialty, appointment_date, created_at
+       FROM appointments
+       WHERE user_id = $1
+       ORDER BY appointment_date DESC`,
+      [userId]
+    );
+
+    log("info", "Retrieved appointments list", {
+      userId,
+      count: result.rows.length,
+    });
+
+    res.json({
+      success: true,
+      service: SERVICE_NAME,
+      userId,
+      appointments: result.rows,
+      count: result.rows.length,
+    });
+  } catch (err) {
+    log("error", "Failed to list appointments", {
+      userId,
+      error: err.message,
+    });
+    res.status(500).json({
+      success: false,
+      service: SERVICE_NAME,
+      message: "Internal server error while listing appointments.",
+      error: err.message,
+    });
+  }
+});
+
+// ── Error handling middleware ────────────────────────────────────────
+app.use((err, req, res, next) => {
+  log("error", "Unhandled error", {
+    error: err.message,
+    stack: err.stack,
+  });
+  res.status(500).json({
+    success: false,
+    service: SERVICE_NAME,
+    message: "Internal server error",
+  });
+});
+
+// ── Graceful Shutdown ────────────────────────────────────────────────
+process.on("SIGINT", () => {
+  log("info", "Shutting down gracefully", {});
+  pool.end(() => {
+    log("info", "Database pool closed", {});
+    process.exit(0);
+  });
+});
+
 app.listen(PORT, "0.0.0.0", () => {
-  log("info", `${SERVICE_NAME} listening on port ${PORT}`);
+  log("info", `${SERVICE_NAME} listening on port ${PORT}`, {});
+  log("info", "Connected to database", {
+    host: process.env.DB_HOST || "postgres",
+    database: process.env.DB_NAME || "mediora_db",
+  });
   if (MEDIORA_PROBLEMS.length > 0) {
-    log("info", `Chaos problems configured: [${MEDIORA_PROBLEMS.join(", ")}] — activation delay: ${CHAOS_DELAY_SECONDS}s`);
+    log("info", `Chaos problems configured: [${MEDIORA_PROBLEMS.join(", ")}] — activation delay: ${CHAOS_DELAY_SECONDS}s`, {});
   }
 });
