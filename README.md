@@ -46,9 +46,9 @@ graph TD
     BillingAPI -->|POST /validate-card<br/>+ W3C Headers| ValidationAPI
     
     %% Database Connections
-    ApptAPI -->|INSERT/SELECT/UPDATE<br/>Appointments| Postgres
-    BillingAPI -->|SELECT/UPDATE<br/>Appointments| Postgres
-    RecordsAPI -->|SELECT<br/>Medical Records| Postgres
+    ApptAPI -->|UPSERT users<br/>INSERT/SELECT appointments| Postgres
+    BillingAPI -->|SELECT/UPDATE appointments<br/>INSERT billing_transactions| Postgres
+    RecordsAPI -->|SELECT<br/>medical_records| Postgres
 ```
 
 ### Component Breakdown
@@ -59,46 +59,48 @@ graph TD
 | **billing-api** | Go / Gin | Validates appointments in PostgreSQL, calls validation-api, updates payment status. Optimized for native APM monitoring. |
 | **validation-api** | Node.js / Express | Validates payment cards (200ms latency); propagates W3C trace context. |
 | **records-api** | Node.js / Express | Fetches medical records and patient history from PostgreSQL. |
-| **postgres** | PostgreSQL 15 | **Persistent stateful storage** for users, doctors, appointments, and medical records. Pre-seeded with dummy data. |
+| **postgres** | PostgreSQL 15 | **Ephemeral stateful storage** — schema and seed data are re-initialized on every container start via `tmpfs`. Ensures `init.sql` always runs fresh, keeping the schema in sync with code. |
 | **loadgen** | Playwright (Chromium) | Headless bot that drives continuous, realistic user traffic. |
 
 ---
 
 ## 💾 Stateful Database Architecture
 
-Mediora uses a **real PostgreSQL database** instead of mock data, enabling realistic CRUD operations and distributed tracing across the entire data layer. The database is automatically initialized on first startup with pre-seeded dummy data.
+Mediora uses a **real PostgreSQL database** instead of mock data, enabling realistic CRUD operations and distributed tracing across the entire data layer. The database is automatically initialized on **every startup** via `init.sql` — the PostgreSQL data directory is mounted as a `tmpfs` RAM-disk, so it is always empty when the container starts, guaranteeing the schema and seed data are always in sync with the code.
 
 ### Database Schema
 
-The PostgreSQL database includes four core tables:
+The PostgreSQL database includes five core tables:
 
 - **users** - Patient records (Budi, Siti, John)
-- **doctors** - Provider profiles (Dr. Siska, Dr. Tirta, Dr. Chaos)
-- **appointments** - Booking records with status tracking (pending → paid → completed)
-- **medical_records** - Historical health data for each patient
+- **doctors** - Provider profiles (9 seeded: Dr. Tirta, Dr. Siska, Dr. Chaos, Dr. Sarah Smith, Dr. Lim, Dr. Michael Jones, Dr. Emily Williams, Dr. Patel, Dr. Wong)
+- **appointments** - Booking records with status tracking (`pending` → `paid`)
+- **medical_records** - Historical health data per patient (pre-seeded for Budi and Siti)
+- **billing_transactions** - Payment ledger; one record inserted per successful booking
 
 ### End-to-End Booking Flow with DB Tracing
 
 ```
-1. Frontend: User clicks "Book Appointment" 
+1. Frontend: User clicks "Book Appointment"
    ↓
 2. Appointment API (Node.js)
-   └─ INSERT INTO appointments (user_id, doctor, specialty) 
-   └─ Extracts appointment_id from response
-   └─ Calls Billing API with appointment_id in payload
+   ├─ INSERT INTO users ... ON CONFLICT DO NOTHING  (upsert — safe for new users)
+   ├─ SELECT id FROM doctors WHERE name = $1        (resolve doctor by name)
+   ├─ INSERT INTO appointments (user_id, doctor_id, status='pending')
+   └─ Calls Billing API with appointment_id in payload (+ W3C trace headers)
    ↓
 3. Billing API (Go)
-   ├─ SELECT status FROM appointments WHERE id = $1 (verify exists)
-   ├─ POST /api/validate-card → Validation API (+ W3C headers)
-   ├─ Validates card success
-   └─ UPDATE appointments SET status = 'paid' WHERE id = $1
+   ├─ SELECT status FROM appointments WHERE id = $1  (verify appointment exists)
+   ├─ POST /api/validate-card → Validation API       (+ W3C trace headers)
+   ├─ UPDATE appointments SET status = 'paid' WHERE id = $1
+   └─ INSERT INTO billing_transactions (appointment_id, user_id, invoice, amount)
    ↓
-4. Records API (independent)
+4. Records API (independent — not in booking flow)
    └─ SELECT * FROM medical_records WHERE user_id = $1
-   └─ Returns patient history + current appointment status
+   └─ Returns patient's historical health records
    ↓
 5. Frontend
-   └─ Displays confirmation with stored appointment_id
+   └─ Displays booking confirmation with appointment_id and billing summary
 ```
 
 All database operations are **logged with W3C Trace Context headers**, enabling complete visibility in your APM tool (Dynatrace, Datadog, Jaeger, etc.).
@@ -115,7 +117,7 @@ To ensure your APM receives realistic, continuous telemetry, the **Loadgen Bot**
 | 👀 **The Window Shopper** | Budi | Abandons the cart. *Login → Start Booking → Cancel → Dashboard.* |
 | 🤒 **The Hypochondriac** | Siti | Obsessively checks records. *Login → Medical Records → View Record Detail.* |
 | 💸 **The Broke Patient** | Siti | Encounters payment issues. *Login → Billing → Declined CC → Failed.* |
-| 🌪️ **The Chaos Magnet** | John | Triggers the Chaos Engine. *Login → Book Dr. Chaos → Chaos Error.* |
+| 🌪️ **The Chaos Magnet** | John | Exercises the chaos-affected booking path. *Login → Book Dr. Chaos → experiences SlowDatabaseQuery / Billing500 errors (once `CHAOS_DELAY_SECONDS` has elapsed).* |
 
 ---
 
